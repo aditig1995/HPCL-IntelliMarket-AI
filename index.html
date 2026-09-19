@@ -883,10 +883,73 @@ tr.row-selected-ta>td:first-child{box-shadow:inset 3px 0 0 var(--hpcl-blue);}
   .os-menu{max-height:260px;}
   .os-name{font-size:12.5px;}
 }
+
+/* ==========================================================================
+   NEW (v5.0, Zonal): REGION SELECTOR + WELCOME SCREEN
+   ----------------------------------------------------------------------------
+   The dashboard now serves four regions from one workbook. Until a workbook is
+   loaded AND a region is chosen, body carries .zone-gated: every analytical
+   surface (tabs, KPIs, map, tables, banners, the analytical filters and the
+   export buttons) is hidden and only the welcome screen, the region selector
+   and the upload control remain. Built only from the existing design tokens.
+   ========================================================================== */
+.region-bar{background:var(--card-bg);margin:12px 14px 0;padding:12px 16px;border-radius:var(--radius);
+  box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  border-left:5px solid var(--hpcl-orange);}
+.region-bar .rb-field{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.region-bar label{font-size:12px;font-weight:800;color:var(--hpcl-blue);text-transform:uppercase;letter-spacing:.6px;}
+.region-bar select{padding:9px 12px;border:2px solid var(--hpcl-blue);border-radius:9px;font-size:14px;
+  font-weight:700;background:#fff;color:var(--hpcl-blue);min-width:230px;font-family:var(--font);cursor:pointer;}
+.region-bar select:focus{outline:2px solid var(--hpcl-orange);outline-offset:1px;}
+.region-bar select.rb-empty{color:var(--text-muted);border-color:var(--hpcl-orange);}
+.region-bar .rb-status{font-size:12.5px;font-weight:600;color:var(--text-mid);}
+.region-bar .rb-status.warn{color:#8a5a00;}
+.region-bar .rb-status.err{color:var(--red);}
+.region-bar .rb-status.ok{color:var(--green);}
+.header-meta .badge.region-badge{background:var(--hpcl-orange);color:#fff;font-weight:700;}
+
+#zoneWelcome{margin:12px 14px;padding:30px 26px 26px;background:var(--card-bg);border-radius:var(--radius);
+  box-shadow:var(--shadow);border:1px dashed var(--border-strong);text-align:center;}
+body:not(.zone-gated) #zoneWelcome{display:none;}
+#zoneWelcome .zw-big{font-size:44px;margin-bottom:4px;}
+#zoneWelcome h2{margin:0 0 8px;color:var(--hpcl-blue);font-size:21px;}
+#zoneWelcome .zw-lead{margin:0 auto 18px;max-width:680px;font-size:14px;color:var(--text-mid);line-height:1.7;}
+.zw-steps{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:0 auto 18px;max-width:820px;}
+.zw-step{flex:1 1 220px;max-width:260px;border:1.5px solid var(--border-strong);border-radius:12px;padding:12px 12px 10px;
+  background:var(--surface-2);text-align:left;font-size:12.5px;color:var(--text-mid);line-height:1.45;}
+.zw-step .zw-n{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;
+  background:var(--border-strong);color:#fff;font-weight:800;font-size:12px;margin-right:6px;}
+.zw-step b{color:var(--text-dark);}
+.zw-step.done{border-color:var(--green);background:var(--green-bg);}
+.zw-step.done .zw-n{background:var(--green);}
+.zw-step.current{border-color:var(--hpcl-orange);background:#fff7f0;box-shadow:0 0 0 3px rgba(255,107,0,.12);}
+.zw-step.current .zw-n{background:var(--hpcl-orange);}
+.zw-msg{margin:0 auto 16px;max-width:720px;padding:11px 15px;border-radius:10px;font-size:13px;line-height:1.6;
+  text-align:left;background:var(--info-bg);border:1px solid #c9d9ff;color:var(--text-dark);}
+.zw-msg.warn{background:var(--amber-bg);border-color:var(--amber);color:#7a4e05;}
+.zw-msg.err{background:var(--red-bg);border-color:var(--red);color:#8f1f1f;}
+.zw-msg.ok{background:var(--green-bg);border-color:var(--green);color:#135e37;}
+.zw-msg:empty{display:none;}
+.zw-regions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 auto 14px;}
+.zw-region{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid var(--border-strong);
+  background:#fff;color:var(--hpcl-blue);}
+.zw-region.bad{color:var(--red);border-color:var(--red);background:var(--red-bg);}
+.zw-note{font-size:11.5px;color:var(--text-muted);margin-top:14px;}
+
+/* Nothing regional is rendered while no region is active. !important because
+   several of these elements are switched on by their own .show / .active class. */
+body.zone-gated .tab-nav,
+body.zone-gated #taDrillHeader,
+body.zone-gated #taWarnBanner,
+body.zone-gated .tab-content,
+body.zone-gated #firstRun,
+body.zone-gated #unmappedModal,
+body.zone-gated #whyOverlay,
+body.zone-gated .filters > :not(.file-upload-wrap){display:none !important;}
 </style>
 </head>
 
-<body>
+<body class="zone-gated">
 
 <div id="loadOverlay">
   <div class="load-card">
@@ -916,10 +979,31 @@ tr.row-selected-ta>td:first-child{box-shadow:inset 3px 0 0 var(--hpcl-blue);}
       </div>
     </div>
     <div class="header-meta">
+      <!-- ===== NEW (v5.0, Zonal): the region currently driving every figure ===== -->
+      <span class="badge region-badge" id="headerRegionBadge">No Region Selected</span>
       <span class="badge" id="headerPeriodBadge">Awaiting Data</span>
       <span id="headerTimestamp"></span>
     </div>
   </div>
+</div>
+
+<!-- ===== NEW (v5.0, Zonal): REGION SELECTOR ================================
+     Mandatory. The selected region is the single source of truth for every
+     KPI, table, map marker, insight and export below it. Nothing regional is
+     shown until a region is chosen. See App.applyRegion() and the zonal store
+     in the Data module. ============================================== -->
+<div class="region-bar" id="regionBar">
+  <div class="rb-field">
+    <label for="regionSelect">📍 Region</label>
+    <select id="regionSelect" class="rb-empty" aria-label="Select Region">
+      <option value="">Select Region</option>
+      <option value="Raipur">Raipur</option>
+      <option value="Bilaspur">Bilaspur</option>
+      <option value="Bhubaneswar">Bhubaneswar</option>
+      <option value="Sambalpur">Sambalpur</option>
+    </select>
+  </div>
+  <span class="rb-status" id="regionStatus">⚪ Upload the zonal Excel workbook to begin</span>
 </div>
 
 <!-- ================= FILTER BAR ================= -->
@@ -982,6 +1066,26 @@ tr.row-selected-ta>td:first-child{box-shadow:inset 3px 0 0 var(--hpcl-blue);}
   </div>
   <button class="btn-refresh" onclick="App.refresh()">🔄 Refresh</button>
   <button class="btn-ghost" onclick="Exporter.exportActions()" title="Download the Outlet Action Centre as CSV">⬇ Export Actions</button>
+</div>
+
+<!-- ===== NEW (v5.0, Zonal): WELCOME / REGION SELECTION SCREEN =============
+     The only content shown while body.zone-gated is set. Filled in by
+     App.showZoneScreen() for each state: no workbook, processing, ready,
+     region chosen before upload, region missing from the workbook, error. -->
+<div id="zoneWelcome">
+  <div class="zw-big">🗺️</div>
+  <h2>Welcome to HPCL Zonal Market Intelligence Dashboard</h2>
+  <p class="zw-lead">Please select a Region to view its market intelligence, performance analytics and strategic insights.</p>
+  <div class="zw-steps">
+    <div class="zw-step" id="zwStep1"><span class="zw-n">1</span><b>Upload the zonal workbook</b><br><span id="zwStep1Sub">One Excel file with the Raipur, Bilaspur, Bhubaneswar and Sambalpur worksheets.</span></div>
+    <div class="zw-step" id="zwStep2"><span class="zw-n">2</span><b>Select a Region</b><br><span id="zwStep2Sub">Use the Region selector at the top of the page.</span></div>
+    <div class="zw-step" id="zwStep3"><span class="zw-n">3</span><b>View the dashboard</b><br>Every tab, map, table, insight and export is populated for that region only.</div>
+  </div>
+  <div class="zw-msg" id="zwMsg"></div>
+  <div class="zw-regions" id="zwRegions"></div>
+  <button type="button" class="file-upload-label" id="zwUploadBtn" style="background:var(--hpcl-orange);font-size:14px;padding:11px 20px;"
+          onclick="document.getElementById('file').click()">📂 Upload Zonal Excel Workbook</button>
+  <div class="zw-note">Your workbook is read entirely inside this browser. Nothing is uploaded to a server.</div>
 </div>
 
 <!-- ================= TABS ================= -->
@@ -1548,7 +1652,7 @@ tr.row-selected-ta>td:first-child{box-shadow:inset 3px 0 0 var(--hpcl-blue);}
   </div>
 </div>
 
-<footer>HPCL Integrated Market Intelligence &amp; Territory Planning · Version 4.6 · For internal strategic use<br>
+<footer>HPCL Integrated Market Intelligence &amp; Territory Planning · Zonal Edition (Raipur · Bilaspur · Bhubaneswar · Sambalpur) · Version 5.0 · For internal strategic use<br>
 <span style="font-size:10.5px;opacity:.8;">Your Excel file is read in this browser only. It is never uploaded to a server and never sent to any third party.</span></footer>
 
 <script>
@@ -2511,30 +2615,26 @@ const Data = (() => {
       '  (* = partial)');
   }
 
-  function parseWorkbook(arrayBuffer) {
-    UI.loading(true, 'Reading workbook…', 15);
-    const wb = XLSX.read(arrayBuffer, { type: 'array' });
+  /* ===== CHANGED (v5.0, Zonal): ONE WORKSHEET → ONE REGION ==================
+     The body of the original single-sheet parseWorkbook(), unchanged in every
+     step (format detection, Industry conversion, Trading Area row filter,
+     district detection, period detection, calendar, prefix-sum index). The
+     only differences: it reads the ONE worksheet it is given instead of the
+     first one, and it reports a problem by throwing, so the zonal loader can
+     say WHICH region's worksheet failed. It leaves `state` populated with that
+     region's data; the caller snapshots it. */
+  function prepareSheet(wb, sheetName) {
+    const one = { SheetNames: [sheetName], Sheets: { [sheetName]: wb.Sheets[sheetName] }, Workbook: wb.Workbook };
 
-    /* v3.2 — STEP 9. Pick the reader by looking at the sheet itself, never at the
-       file name: both workbooks call their first sheet 'INDUSTRY DATA'. Anything
-       that is not recognisably the Industry layout goes down the original path,
-       byte for byte as before. */
-    const fmt = detectFormat(wb);
+    const fmt = detectFormat(one);
     state.source = fmt.kind;
+    state.industryStats = null;
 
     let rows;
     if (fmt.kind === 'industry') {
-      UI.loading(true, 'Converting Industry Data workbook…', 25);
-      try {
-        rows = industryToDashboardRows(wb, fmt);
-      } catch (err) {
-        UI.loading(false);
-        UI.toast(err.message, 'err');
-        console.error(err);
-        return false;
-      }
+      rows = industryToDashboardRows(one, fmt);
     } else {
-      rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+      rows = XLSX.utils.sheet_to_json(one.Sheets[one.SheetNames[0]]);
       /* A default-format file carries coordinates the Industry workbook does not.
          Remember them so a later Industry upload keeps the map alive. */
       try { GeoRef.learn(rows); } catch (e) { console.warn('[Data] geo cache skipped', e); }
@@ -2542,14 +2642,8 @@ const Data = (() => {
 
     rows = rows.filter(r => String(r['Trading_Area_Name'] || '').trim().length > 0);
     state.raw = rows;
+    if (!rows.length) throw new Error('No rows with a Trading Area were found in this worksheet.');
 
-    if (!rows.length) {
-      UI.loading(false);
-      UI.toast('No rows with a Trading Area were found in that file.', 'err');
-      return false;
-    }
-
-    UI.loading(true, 'Detecting columns and periods…', 35);
     const headers = Object.keys(rows[0]);
     state.districtKey = detectDistrict(headers);
 
@@ -2566,30 +2660,136 @@ const Data = (() => {
     state.periods.forEach((p, i) => state.periodIndex[p] = i);
     buildCalendar();   // v3.2 — STEP 6/7: latest month + financial years, derived not hard-coded
 
-    if (!state.periods.length) {
-      UI.loading(false);
-      UI.toast('No "MS <Mon YYYY>" or "HSD <Mon YYYY>" columns found.', 'err');
-      return false;
-    }
+    if (!state.periods.length) throw new Error('No "MS <Mon YYYY>" or "HSD <Mon YYYY>" columns found in this worksheet.');
 
-    UI.loading(true, 'Building volume index…', 55);
     buildIndex();
     state.loaded = true;
+  }
 
-    /* ===== NEW (v4.6): a new workbook invalidates every previous selection.
-       __uid values are positional, so carrying a selection across an upload
-       would silently point at a different outlet. Cleared before the filters
-       are repopulated and before the refresh below. ===== */
-    try { if (window.App && App.resetOutletSelection) App.resetOutletSelection(); } catch (e) { }
-    try { if (window.App && App.showFirstRun) App.showFirstRun(false); } catch (e) { }
+  /* ===== NEW (v5.0, Zonal): THE ZONAL DATA STORE ============================
+     zone.regions[<Region>] holds a complete, independent copy of everything
+     the single-region dashboard kept in `state` (rows, periods, calendar,
+     district column, TA coverage …). Selecting a region copies that snapshot
+     back INTO the same `state` object every module already reads, so Model,
+     Territory, Actions, MapView, Analytics, Brief, OutletSearch and every
+     export follow the selected region through their existing, unchanged code
+     paths. No record from one region can ever sit in another region's rows. */
+  const REGIONS = ['Raipur', 'Bilaspur', 'Bhubaneswar', 'Sambalpur'];
+  const REGION_FIELDS = ['raw', 'periods', 'periodIndex', 'districtKey', 'outletKey', 'loaded', 'source',
+    'latestMonth', 'fiscalYears', 'latestFY', 'latestCompleteFY', 'industryStats', 'taCoverage'];
+  const zone = {
+    regions: {},     // region -> state snapshot
+    errors: {},      // region -> reason it is not available
+    sheetOf: {},     // region -> worksheet name it was read from
+    loaded: false,   // a zonal workbook with at least one readable region is in memory
+    active: '',      // the selected region, '' when none
+    fileName: ''
+  };
 
-    App.populatePeriodSelectors();
-    App.populateFilters();
-    UI.loading(true, 'Computing intelligence…', 70);
-    // Yield once so the overlay paints before the heavy synchronous pass.
-    setTimeout(() => { App.refresh(); UI.loading(false); }, 30);
+  function blankState() {
+    return { raw: [], periods: [], periodIndex: {}, districtKey: null, outletKey: 'Outlet Name', loaded: false,
+             source: null, latestMonth: null, fiscalYears: [], latestFY: null, latestCompleteFY: null,
+             industryStats: null, taCoverage: null };
+  }
+  function snapshotState() { const s = {}; REGION_FIELDS.forEach(k => { s[k] = state[k]; }); return s; }
+  function restoreState(s) { REGION_FIELDS.forEach(k => { state[k] = s[k]; }); }
+
+  /* Worksheet names are matched tolerantly (case, spaces and punctuation are
+     ignored; "Raipur RO" also matches Raipur) — the data itself is never touched. */
+  const sheetKey = s => String(s || '').toLowerCase().replace(/[^a-z]/g, '');
+  function findSheet(wb, region) {
+    const want = sheetKey(region);
+    return wb.SheetNames.find(n => sheetKey(n) === want) ||
+           wb.SheetNames.find(n => sheetKey(n).startsWith(want)) || null;
+  }
+
+  /* Reads ALL FOUR worksheets. Resolves { ok, loaded:[regions], errors:{}, error }.
+     Asynchronous only so the progress overlay can paint between worksheets.
+     On failure the previously loaded workbook, and whatever region was on
+     screen, are left exactly as they were. */
+  function parseWorkbook(arrayBuffer) {
+    const before = snapshotState();
+    return new Promise(resolve => {
+      UI.loading(true, 'Reading zonal workbook…', 10);
+      setTimeout(() => {
+        const fail = msg => { restoreState(before); UI.loading(false); resolve({ ok: false, error: msg }); };
+        let wb;
+        try { wb = XLSX.read(arrayBuffer, { type: 'array' }); }
+        catch (err) { console.error(err); fail('That file could not be read as an Excel workbook.'); return; }
+
+        const found = REGIONS.map(r => ({ region: r, sheet: findSheet(wb, r) })).filter(f => f.sheet);
+        if (!found.length) {
+          fail('This workbook does not contain the regional worksheets. Expected worksheets named ' +
+               REGIONS.join(', ') + '; found: ' + (wb.SheetNames.join(', ') || 'none') + '.');
+          return;
+        }
+        /* Default-format worksheets first, so their coordinates are learnt
+           before any Industry-format worksheet is converted. */
+        found.forEach(f => {
+          try { f.kind = detectFormat({ SheetNames: [f.sheet], Sheets: { [f.sheet]: wb.Sheets[f.sheet] } }).kind; }
+          catch (e) { f.kind = 'default'; }
+        });
+        const order = found.slice().sort((a, b) => (a.kind === 'industry') - (b.kind === 'industry'));
+
+        const regions = {}, errors = {}, sheetOf = {};
+        let i = 0;
+        const next = () => {
+          if (i >= order.length) { finish(); return; }
+          const f = order[i++];
+          UI.loading(true, 'Reading ' + f.region + ' worksheet (' + i + ' of ' + order.length + ')…',
+                     15 + Math.round(75 * i / order.length));
+          setTimeout(() => {
+            restoreState(blankState());
+            try {
+              prepareSheet(wb, f.sheet);
+              regions[f.region] = snapshotState();
+              sheetOf[f.region] = f.sheet;
+              console.info('[Zone] ' + f.region + ' ← worksheet "' + f.sheet + '" · ' + state.raw.length +
+                           ' outlets · ' + state.periods.length + ' months (' + state.periods[0] + ' → ' + state.latestMonth + ')');
+            } catch (err) {
+              errors[f.region] = (err && err.message) ? err.message : String(err);
+              console.error('[Zone] ' + f.region + ' worksheet "' + f.sheet + '" could not be read', err);
+            }
+            next();
+          }, 20);
+        };
+        const finish = () => {
+          REGIONS.forEach(r => {
+            if (!regions[r] && !errors[r]) errors[r] = 'No worksheet named "' + r + '" was found in the workbook.';
+          });
+          const loaded = REGIONS.filter(r => regions[r]);
+          if (!loaded.length) {
+            fail('None of the regional worksheets could be read. ' +
+                 REGIONS.map(r => r + ': ' + errors[r]).join(' · '));
+            return;
+          }
+          zone.regions = regions; zone.errors = errors; zone.sheetOf = sheetOf;
+          zone.loaded = true; zone.active = '';
+          /* Nothing is active until a region is selected. */
+          restoreState(blankState());
+          UI.loading(false);
+          resolve({ ok: true, loaded: loaded, errors: errors });
+        };
+        next();
+      }, 30);
+    });
+  }
+
+  /* Make one region the active dataset. Returns false if it is not loaded. */
+  function activateRegion(name) {
+    if (!zone.regions[name]) return false;
+    restoreState(zone.regions[name]);
+    zone.active = name;
     return true;
   }
+  /* No region active: the dashboard holds no regional data at all. */
+  function deactivateRegion() {
+    restoreState(blankState());
+    zone.active = '';
+  }
+  function activeRegion() { return zone.active || ''; }
+  /* 'Raipur_' — used to name export files after the region they contain. */
+  function regionTag() { return zone.active ? zone.active.replace(/\s+/g, '_') + '_' : ''; }
 
   /* DEFAULT_PATH is a RELATIVE path ('data/default_data.xlsx'), with no leading
      slash, which is what makes this work unchanged on a GitHub Pages project
@@ -2604,9 +2804,21 @@ const Data = (() => {
       .then(r => { if (!r.ok) throw new Error('missing'); return r.arrayBuffer(); })
       .then(buf => {
         defaultAvailable = true;
-        parseWorkbook(buf);
-        document.getElementById('fileNameTag').textContent = 'default_data.xlsx';
-        setStatus('default');
+        /* ===== CHANGED (v5.0, Zonal): the bundled workbook is loaded into the
+           zonal store like any upload, but NO region is opened automatically —
+           the user still has to pick one. A default file that is not a
+           four-region workbook is reported, never silently shown. ===== */
+        parseWorkbook(buf).then(res => {
+          if (res.ok) {
+            zone.fileName = 'default_data.xlsx';
+            document.getElementById('fileNameTag').textContent = 'default_data.xlsx';
+            setStatus('default');
+            try { if (window.App && App.afterWorkbookLoaded) App.afterWorkbookLoaded(res); } catch (e) { console.error(e); }
+          } else {
+            setStatus('notzonal');
+            try { if (window.App && App.showZoneScreen) App.showZoneScreen('noWorkbook'); } catch (e) { }
+          }
+        });
       })
       .catch(() => {
         /* ===== NEW (v4.6) ===== */
@@ -2615,7 +2827,9 @@ const Data = (() => {
         const b = document.getElementById('btnDownloadDefault');
         if (b) { b.disabled = true; b.style.opacity = '.45'; b.style.cursor = 'default';
                  b.title = 'No default dataset is published with this dashboard.'; }
-        try { if (window.App && App.showFirstRun) App.showFirstRun(true); } catch (e) { }
+        /* ===== CHANGED (v5.0, Zonal): the zonal welcome screen replaces the
+           single-file first-run panel. ===== */
+        try { if (window.App && App.showZoneScreen) App.showZoneScreen('noWorkbook'); } catch (e) { }
       });
   }
 
@@ -2639,14 +2853,18 @@ const Data = (() => {
     const el = document.getElementById('dataSourceStatus');
     if (!el) return;
     if (mode === 'uploaded') el.innerHTML = '🟠 Data Source: Uploaded Dataset';
-    else if (mode === 'missing') el.innerHTML = '⚪ No default dataset found — upload an Excel file to begin';
+    else if (mode === 'missing') el.innerHTML = '⚪ No default dataset found — upload the zonal Excel workbook to begin';
+    /* ===== NEW (v5.0, Zonal) ===== */
+    else if (mode === 'notzonal') el.innerHTML = '⚪ Default dataset is not a four-region workbook — upload the zonal Excel workbook';
     else el.innerHTML = '🟢 Data Source: Default Dataset';
   }
 
   return { state, vol, monthVol, parseWorkbook, loadDefault, downloadDefault, setStatus, periodSortValue, DEFAULT_PATH,
            IndustryOptions, GeoRef, detectFormat, UNMAPPED_TA,
            /* ===== NEW (v4.6) ===== */
-           defaultAvailable: () => defaultAvailable };
+           defaultAvailable: () => defaultAvailable,
+           /* ===== NEW (v5.0, Zonal) ===== */
+           REGIONS, zone: () => zone, activateRegion, deactivateRegion, activeRegion, regionTag };
 })();
 
 /* ============================ MODEL ============================ */
@@ -7158,7 +7376,9 @@ const Brief = (() => {
     }
 
     const scope = App.selectedTA() ? App.selectedTA()
-      : (document.getElementById('salesArea').value || 'Raipur Retail Region');
+      : (document.getElementById('salesArea').value ||
+         /* CHANGED (v5.0, Zonal): was the hard-coded 'Raipur Retail Region'. */
+         ((Data.activeRegion() || 'Raipur') + ' Retail Region'));
     /* ===== NEW (v4.6): when an outlet is globally selected, its name is added
        to the scope line that was already here. The KPIs, the narrative and
        every number below are produced by the SAME Model.build() pass over the
@@ -7562,6 +7782,8 @@ const TableExport = (() => {
   function contextRows(title, rowCount) {
     const ctx = (Model.state && Model.state.ctx) || null;
     const bits = [];
+    /* NEW (v5.0, Zonal): every export states which region it came from. */
+    if (Data.activeRegion()) bits.push('Region: ' + Data.activeRegion());
     bits.push('Product: ' + (sel('product') || 'Combined'));
     const d = sel('district'); bits.push('District: ' + (d || 'All'));
     const sa = sel('salesArea'); bits.push('Sales Area: ' + (sa || 'All'));
@@ -7588,7 +7810,7 @@ const TableExport = (() => {
     const d = new Date();
     const p = n => String(n).padStart(2, '0');
     const stamp = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
-    return base + '_' + stamp + '.xlsx';
+    return Data.regionTag() + base + '_' + stamp + '.xlsx';
   }
 
   /* Read a rendered table into { head:[], body:[[cell]] }, honouring
@@ -8224,7 +8446,8 @@ const Exporter = (() => {
       'Expected Recovery MS (KLPM)', 'Expected Recovery HSD (KLPM)',
       'Recommended Action', 'Expected KL Impact (KLPM)', 'Suggested Owner', 'Urgency',
       'Latitude', 'Longitude'];
-    const rows = [['HPCL Outlet Action Centre — ' + ctx.currStart + ' to ' + ctx.currEnd], head];
+    const rows = [['HPCL Outlet Action Centre — ' + (Data.activeRegion() ? Data.activeRegion() + ' Region · ' : '') +
+                   ctx.currStart + ' to ' + ctx.currEnd], head];
     const gp = p => p.n ? p.growthPct.toFixed(1) : '';
     const plays = s => (s && s.weak && s.plays.length)
       ? s.plays.map(p => p.t + ': ' + p.d).join(' | ')
@@ -8286,7 +8509,7 @@ const Exporter = (() => {
       }));
 
       StyledExcel.save({
-        fileName: 'HPCL_Outlet_Action_Centre_' + ctx.currEnd.replace(/\s+/g, '_') + '.xlsx',
+        fileName: 'HPCL_' + Data.regionTag() + 'Outlet_Action_Centre_' + ctx.currEnd.replace(/\s+/g, '_') + '.xlsx',
         sheetName: 'Outlet Actions',
         titleRows: [
           rows[0],
@@ -8303,13 +8526,13 @@ const Exporter = (() => {
         UI.toast('Exported ' + list.length + ' outlet actions to a formatted Excel report.', 'ok');
       }).catch(e => {
         console.warn('Styled export failed, writing CSV instead:', e);
-        download('HPCL_Outlet_Actions_' + ctx.currEnd.replace(/\s+/g, '_') + '.csv', rows);
+        download('HPCL_' + Data.regionTag() + 'Outlet_Actions_' + ctx.currEnd.replace(/\s+/g, '_') + '.csv', rows);
         UI.toast('Exported ' + list.length + ' outlet actions.', 'ok');
       });
       return;
     }
 
-    download('HPCL_Outlet_Actions_' + ctx.currEnd.replace(/\s+/g, '_') + '.csv', rows);
+    download('HPCL_' + Data.regionTag() + 'Outlet_Actions_' + ctx.currEnd.replace(/\s+/g, '_') + '.csv', rows);
     UI.toast('Exported ' + list.length + ' outlet actions.', 'ok');
   }
   return { exportActions };
@@ -9208,7 +9431,7 @@ const DealerAttack = (() => {
             ' ranked outlets are SECONDARY OPPORTUNITIES, ranked by the same score with their original Below Threshold classification retained.')
       : 'All ' + list.length + ' ranked outlets are PRIMARY ATTACK opportunities (score ≥ ' + PRIMARY_MIN_SCORE + ').';
     const title = [
-      ['🎯 HPCL — Top 100 Outlets to Attack / Investigate'],
+      ['🎯 HPCL — Top 100 Outlets to Attack / Investigate' + (Data.activeRegion() ? ' — ' + Data.activeRegion() + ' Region' : '')],
       ['Period: ' + ctx.currStart + ' → ' + ctx.currEnd + '   (compared with ' + ctx.histStart + ' → ' + ctx.histEnd + ')'],
       [(short
         ? 'Only ' + list.length + ' eligible outlet' + (list.length === 1 ? '' : 's') + ' survived the exclusions in this filter, so the list stops at ' +
@@ -9229,7 +9452,7 @@ const DealerAttack = (() => {
       []
     ];
 
-    const fileName = 'HPCL_Top_100_Dealer_Attack_List.xlsx';
+    const fileName = 'HPCL_' + Data.regionTag() + 'Top_100_Dealer_Attack_List.xlsx';
     const done = () => UI.toast(short
       ? list.length + ' eligible outlet' + (list.length === 1 ? '' : 's') + ' exported (' + primaryCount +
         ' Primary Attack · ' + secondaryCount + ' Secondary Opportunity).'
@@ -9245,12 +9468,12 @@ const DealerAttack = (() => {
         wideRe: /reason|action plan|why attack|caveats/i
       }).then(done).catch(e => {
         console.warn('[DealerAttack] styled export failed, writing CSV instead:', e);
-        csv('HPCL_Top_100_Dealer_Attack_List.csv', HEAD, body);
+        csv('HPCL_' + Data.regionTag() + 'Top_100_Dealer_Attack_List.csv', HEAD, body);
         done();
       });
       return;
     }
-    csv('HPCL_Top_100_Dealer_Attack_List.csv', HEAD, body);
+    csv('HPCL_' + Data.regionTag() + 'Top_100_Dealer_Attack_List.csv', HEAD, body);
     done();
   }
 
@@ -10671,6 +10894,19 @@ const MapView = (() => {
     return pts;
   }
 
+  /* ===== NEW (v5.0, Zonal): forget everything tied to the previous region —
+     the open popup, the last-clicked outlet behind the distance lines, the
+     lines themselves and the selection ring — and re-fit the view to the new
+     region's outlets on the next render. The user's toggles (map mode, HPCL
+     Only, Distance Connections, base map) are preferences and are kept. */
+  function resetForRegion() {
+    try { if (map) map.closePopup(); } catch (e) { }
+    lastClicked = null;
+    try { clearDistance(); } catch (e) { }
+    clearSelection();
+    firstFit = true;
+  }
+
   function render() {
     const pts = drawMarkers();
     const selected = App.selectedTA();
@@ -10834,6 +11070,8 @@ const MapView = (() => {
     init, render, drawMarkers, toggleDistance, toggleHpclOnly, fitAll, focusTA, focusSelectedTA, invalidate, renderTADetail,
     /* ===== NEW (v4.6): global outlet selection ===== */
     drawSelectionHighlight, clearSelection, frameTASelection,
+    /* ===== NEW (v5.0, Zonal) ===== */
+    resetForRegion,
     /* ===== NEW (v4.4) ===== */
     selectOutlet, openOutletPopup, focusOutlet, getState, markerColor,
     /* ===== NEW (v4.5.4): base-map status + picker, for the PDF module,
@@ -10958,7 +11196,7 @@ const Unmapped = (() => {
                      { wch: 12 }, { wch: 12 }, { wch: 17 }, { wch: 18 }, { wch: 19 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Unmapped TA Outlets');
-      XLSX.writeFile(wb, 'Unmapped_TA_Outlets.xlsx');
+      XLSX.writeFile(wb, Data.regionTag() + 'Unmapped_TA_Outlets.xlsx');
       UI.toast('Exported ' + l.length + ' unmapped outlets.', 'ok');
     } catch (e) {
       console.error(e);
@@ -11493,7 +11731,8 @@ const TAReport = (() => {
       doc.text('Trading Area: ' + snap.ta, MARGIN.left, y + 2);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
       doc.setTextColor.apply(doc, GREY);
-      doc.text('District: ' + snap.district + '   |   Sales Area: ' + snap.salesArea +
+      doc.text((Data.activeRegion() ? 'Region: ' + Data.activeRegion() + '   |   ' : '') +
+        'District: ' + snap.district + '   |   Sales Area: ' + snap.salesArea +
         '   |   Analysis Period: ' + snap.from + ' to ' + snap.to,
         MARGIN.left, y + 8);
       y += 14;
@@ -11657,7 +11896,7 @@ const TAReport = (() => {
       }
 
       const safe = s => String(s || '').replace(/[^A-Za-z0-9._-]+/g, '_').replace(/^_+|_+$/g, '');
-      doc.save('HPCL_TA_Analysis_' + safe(snap.ta) + '_' + safe(snap.from) + '_to_' + safe(snap.to) + '.pdf');
+      doc.save('HPCL_TA_Analysis_' + Data.regionTag() + safe(snap.ta) + '_' + safe(snap.from) + '_to_' + safe(snap.to) + '.pdf');
       UI.toast('Trading Area report downloaded — ' + snap.ta + ' (' + total + ' pages).', 'ok');
     } catch (e) {
       console.error(e);
@@ -12292,6 +12531,191 @@ const App = (() => {
         .map(v => '<option value="' + Util.esc(v) + '"' + (v === keepTA ? ' selected' : '') + '>' + Util.esc(v) + '</option>').join('');
   }
 
+  /* ======================================================================
+     NEW (v5.0, Zonal): REGION SELECTOR ORCHESTRATION
+     ----------------------------------------------------------------------
+     The Region selector is the single source of truth. applyRegion() makes
+     the chosen region's snapshot the active Data.state and then runs the SAME
+     sequence the original single-region upload ran (reset selection →
+     period selectors → filters → refresh), so every module repopulates
+     through its existing code. While no region is active the page is
+     "gated": only the welcome screen, the selector and the upload control
+     are visible, and Data.state holds no regional rows at all.
+     ====================================================================== */
+  const $ = id => document.getElementById(id);
+
+  function setGated(on) {
+    document.body.classList.toggle('zone-gated', !!on);
+    if (on) {
+      try { Actions.closeWhy(); } catch (e) { }
+      try { Unmapped.close(); } catch (e) { }
+      const z = Data.zone();
+      $('headerPeriodBadge').textContent = z.loaded ? 'Select a Region' : 'Awaiting Data';
+      $('headerTimestamp').textContent = '';
+    }
+  }
+
+  /* Region bar, header badge and selector labels. `note` / `noteCls` carry a
+     one-off message (processing, upload failure) in place of the usual status. */
+  function updateRegionUI(note, noteCls) {
+    const z = Data.zone(), act = Data.activeRegion(), sel = $('regionSelect');
+    [...sel.options].forEach(o => {
+      if (!o.value) return;
+      o.textContent = o.value + (z.loaded && !z.regions[o.value] ? ' (not available in workbook)' : '');
+    });
+    sel.classList.toggle('rb-empty', !sel.value);
+    $('headerRegionBadge').textContent = act ? 'Region: ' + act : 'No Region Selected';
+
+    const failed = Data.REGIONS.filter(r => z.loaded && !z.regions[r]);
+    const failNote = failed.length ? '  ·  ⚠ Not available: ' + failed.join(', ') : '';
+    let text, cls = '';
+    if (note) { text = note; cls = noteCls || ''; }
+    else if (!z.loaded) { text = '⚪ Upload the zonal Excel workbook to begin'; }
+    else if (!act) {
+      text = '🟢 Workbook loaded — ' + (Data.REGIONS.length - failed.length) + ' of ' + Data.REGIONS.length +
+             ' regions ready. Select a region to open its dashboard.' + failNote;
+      cls = failed.length ? 'warn' : 'ok';
+    } else {
+      const S = Data.state;
+      text = '📍 Showing ' + act + ' · ' + S.raw.length + ' outlets · data ' +
+             (S.periods[0] || '—') + ' → ' + (S.latestMonth || '—') +
+             ' · worksheet “' + (z.sheetOf[act] || act) + '”' + failNote;
+      cls = failed.length ? 'warn' : '';
+    }
+    const st = $('regionStatus');
+    st.textContent = text;
+    st.className = 'rb-status' + (cls ? ' ' + cls : '');
+  }
+
+  /* The welcome / selection screen, one mode per state the user can be in. */
+  function showZoneScreen(mode, region, detail) {
+    setGated(true);
+    const z = Data.zone(), E = Util.esc;
+    const ready = Data.REGIONS.filter(r => z.regions[r]);
+    $('zwStep1').className = 'zw-step ' + (z.loaded ? 'done' : 'current');
+    $('zwStep2').className = 'zw-step' + (z.loaded ? ' current' : '');
+    $('zwStep3').className = 'zw-step';
+    $('zwStep1Sub').textContent = z.loaded
+      ? 'Loaded “' + (z.fileName || 'workbook') + '” — ' + ready.length + ' of ' + Data.REGIONS.length + ' regions ready.'
+      : 'One Excel file with the Raipur, Bilaspur, Bhubaneswar and Sambalpur worksheets.';
+    $('zwUploadBtn').textContent = z.loaded ? '📂 Upload a Different Workbook' : '📂 Upload Zonal Excel Workbook';
+
+    $('zwRegions').innerHTML = !z.loaded ? '' : Data.REGIONS.map(r => {
+      const s = z.regions[r];
+      return s
+        ? '<span class="zw-region">✓ ' + E(r) + ' · ' + s.raw.length + ' outlets · up to ' + E(s.latestMonth || '—') + '</span>'
+        : '<span class="zw-region bad" title="' + E(z.errors[r] || '') + '">✕ ' + E(r) + ' — not available</span>';
+    }).join('');
+
+    let cls = '', html = '';
+    const why = r => E(z.errors[r] || 'It is not in the uploaded workbook.');
+    if (mode === 'needWorkbook') {
+      cls = 'warn';
+      html = 'You selected <b>' + E(region) + '</b>, but the zonal Excel workbook has not been uploaded yet. ' +
+             'Please upload the workbook first — <b>' + E(region) + '</b> will open as soon as it has been read.';
+    } else if (mode === 'regionUnavailable') {
+      cls = 'err';
+      html = '<b>' + E(region) + '</b> cannot be shown: ' + why(region) +
+             ' Please select another region, or upload a workbook containing a valid <b>' + E(region) + '</b> worksheet.';
+    } else if (mode === 'error') {
+      cls = 'err';
+      html = E(detail || 'The workbook could not be read.');
+    } else if (mode === 'ready' || z.loaded) {
+      cls = ready.length === Data.REGIONS.length ? 'ok' : 'warn';
+      html = 'Workbook loaded. Please select a <b>Region</b> from the selector at the top of the page to open its dashboard.' +
+        (ready.length < Data.REGIONS.length
+          ? '<br>Not available: ' + Data.REGIONS.filter(r => !z.regions[r]).map(r => '<b>' + E(r) + '</b> — ' + why(r)).join('; ')
+          : '');
+    } else {
+      html = 'Start by uploading the zonal Excel workbook. It must contain four worksheets named ' +
+             '<b>Raipur</b>, <b>Bilaspur</b>, <b>Bhubaneswar</b> and <b>Sambalpur</b>.';
+    }
+    const m = $('zwMsg');
+    m.className = 'zw-msg' + (cls ? ' ' + cls : '');
+    m.innerHTML = html;
+    updateRegionUI();
+  }
+
+  /* Everything that belongs to the previous region is cleared; user
+     preferences that mean the same thing in every region (Product, action and
+     territory chips, owner, map mode and toggles, base map, sort orders, the
+     open tab) are kept. */
+  function resetForRegion() {
+    resetOutletSelection();
+    try { MapView.resetForRegion(); } catch (e) { }
+    try { Actions.closeWhy(); } catch (e) { }
+    try { Unmapped.close(); } catch (e) { }
+    ['actionSearch', 'tableSearch', 'outletSearch', 'taSummarySearch'].forEach(id => { const e = $(id); if (e) e.value = ''; });
+    try { Actions.filters.search = ''; } catch (e) { }
+    try { Territory.filters.search = ''; } catch (e) { }
+    const us = $('unmappedSearch');
+    if (us && us.value) { us.value = ''; us.dispatchEvent(new Event('input')); }
+  }
+
+  function applyRegion(name) {
+    const z = Data.zone();
+    if (!name) { Data.deactivateRegion(); showZoneScreen(z.loaded ? 'ready' : 'noWorkbook'); return; }
+    if (!z.loaded) { Data.deactivateRegion(); showZoneScreen('needWorkbook', name); return; }
+    if (!z.regions[name]) { Data.deactivateRegion(); showZoneScreen('regionUnavailable', name); return; }
+
+    /* Remember the From/To the user was looking at, so a deliberately chosen
+       range carries over to the new region when that region has those months.
+       The untouched default (latest month → latest month) instead follows the
+       new region's own latest month. */
+    const hadRegion = !!Data.activeRegion();
+    const fp = $('fromPeriod').value, tp = $('toPeriod').value, prevLatest = Data.state.latestMonth;
+    const userRange = hadRegion && fp && tp && !(fp === prevLatest && tp === prevLatest);
+
+    UI.loading(true, 'Loading ' + name + ' region…', 55);
+    setTimeout(() => {
+      try {
+        Data.activateRegion(name);
+        resetForRegion();
+        showFirstRun(false);
+
+        populatePeriodSelectors();
+        if (userRange) {
+          const PI = Data.state.periodIndex;
+          if (PI[fp] != null && PI[tp] != null) { $('fromPeriod').value = fp; $('toPeriod').value = tp; }
+          else UI.toast('The period ' + fp + ' → ' + tp + ' is not available for ' + name + ', so its latest month is shown.', 'warn');
+        }
+
+        /* Sales Area / District / Trading Area: populateFilters() keeps a
+           previous choice only if it exists in this region, otherwise it falls
+           back to "All". A region without a District column hides the filter. */
+        if (!Data.state.districtKey) {
+          $('districtGroup').style.display = 'none';
+          $('district').innerHTML = '<option value="">All Districts</option>';
+        }
+        populateFilters();
+
+        setGated(false);
+        refresh();
+        if ($('tab3').classList.contains('active')) MapView.invalidate();
+        updateRegionUI();
+        UI.loading(false);
+        UI.toast('Showing ' + name + ' — ' + Data.state.raw.length + ' outlets.', 'ok');
+      } catch (err) {
+        console.error(err);
+        Data.deactivateRegion();
+        UI.loading(false);
+        showZoneScreen('error', name, name + ' could not be displayed: ' + (err && err.message ? err.message : err));
+      }
+    }, 30);
+  }
+
+  /* Called once a workbook has been read successfully (upload or default). */
+  function afterWorkbookLoaded(res) {
+    const z = Data.zone();
+    const failed = Data.REGIONS.filter(r => !z.regions[r]);
+    if (failed.length) UI.toast('Loaded ' + res.loaded.join(', ') + '. Not available: ' + failed.join(', ') + '.', 'warn');
+    else UI.toast('Zonal workbook loaded — all four regions are ready.', 'ok');
+    const want = $('regionSelect').value;
+    if (want && z.regions[want]) applyRegion(want);
+    else if (want) { Data.deactivateRegion(); showZoneScreen('regionUnavailable', want); }
+    else { Data.deactivateRegion(); showZoneScreen('ready'); }
+  }
+
   function refresh() {
     if (!Data.state.loaded) {
       document.getElementById('headerPeriodBadge').textContent = 'Awaiting Data';
@@ -12370,22 +12794,47 @@ const App = (() => {
   }
 
   function bind() {
+    /* ===== CHANGED (v5.0, Zonal): the upload now reads all four regional
+       worksheets into the zonal store. A file that cannot be read never
+       replaces a workbook that is already loaded. ===== */
     document.getElementById('file').addEventListener('change', e => {
       const f = e.target.files[0];
       if (!f) return;
+      e.target.value = '';   // lets the same file be chosen again after a fix
       document.getElementById('fileNameTag').textContent = f.name;
-      const r = new FileReader();
-      r.onload = ev => {
-        try {
-          if (Data.parseWorkbook(ev.target.result)) Data.setStatus('uploaded');
-        } catch (err) {
-          UI.loading(false);
-          UI.toast('That file could not be read as a workbook.', 'err');
-          console.error(err);
+      updateRegionUI('⏳ Processing “' + f.name + '”…');
+      const failed = msg => {
+        const z = Data.zone();
+        UI.loading(false);
+        UI.toast(msg, 'err');
+        if (z.loaded) {
+          document.getElementById('fileNameTag').textContent = z.fileName || 'No file selected';
+          const keep = ' The previously loaded workbook “' + (z.fileName || '') + '” is still in use.';
+          if (Data.activeRegion()) updateRegionUI('⚠ Upload failed: ' + msg + keep, 'err');
+          else showZoneScreen('error', null, msg + keep);
+        } else {
+          document.getElementById('fileNameTag').textContent = 'No file selected';
+          showZoneScreen('error', null, msg);
         }
+      };
+      const r = new FileReader();
+      r.onerror = () => failed('The file could not be opened by the browser.');
+      r.onload = ev => {
+        let p;
+        try { p = Data.parseWorkbook(ev.target.result); }
+        catch (err) { console.error(err); failed('That file could not be read as a workbook.'); return; }
+        p.then(res => {
+          if (!res.ok) { failed(res.error); return; }
+          Data.zone().fileName = f.name;
+          Data.setStatus('uploaded');
+          afterWorkbookLoaded(res);
+        }).catch(err => { console.error(err); failed('That file could not be read as a workbook.'); });
       };
       r.readAsArrayBuffer(f);
     });
+
+    /* ===== NEW (v5.0, Zonal): the Region selector drives the whole page. ===== */
+    document.getElementById('regionSelect').addEventListener('change', e => applyRegion(e.target.value));
 
     /* ===== CHANGED (v4.6): the three listeners below gained ONE extra call,
        dropSelectionIfStale(), which removes the outlet selection when the user
@@ -12452,6 +12901,9 @@ const App = (() => {
        Mounted after the export buttons so header measurement sees the final
        layout. The table markup is static, so this runs exactly once. */
     ColResize.mountAll();
+    /* ===== NEW (v5.0, Zonal): nothing regional is shown until a workbook is
+       loaded and a region is chosen. ===== */
+    showZoneScreen('noWorkbook');
     Data.loadDefault();
   }
 
@@ -12460,7 +12912,9 @@ const App = (() => {
     populateFilters, populatePeriodSelectors, gotoActions, gotoActionsForTA, updateTABanner,
     /* ===== NEW (v4.6): global outlet selection ===== */
     selectOutlet, clearOutletSelection, resetOutletSelection,
-    selectedOutletUid, selectedOutletEntry, showFirstRun
+    selectedOutletUid, selectedOutletEntry, showFirstRun,
+    /* ===== NEW (v5.0, Zonal) ===== */
+    applyRegion, afterWorkbookLoaded, showZoneScreen, updateRegionUI
   };
 })();
 
