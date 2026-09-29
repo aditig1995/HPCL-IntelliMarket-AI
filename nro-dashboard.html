@@ -373,6 +373,7 @@ body.updating #kpis,body.updating .field-list,body.updating #sitesTable,body.upd
 .ds-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
 .ds-btn{border:0;border-radius:8px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;background:var(--orange);color:#fff}
 .ds-btn.ghost{background:#fff;color:var(--navy);border:1px solid #c5d5f5}
+.tb-btn:disabled,.ds-btn:disabled{opacity:.45;cursor:not-allowed}
 @media print{.topbar .tb-btn,.filterbar,.mapcard,.below,.kpis,.tabs,.statusbar,.mapwrap,.panel-h .btn,.panel-h select,.panel-h input{display:none!important}.layout{display:block}.pane{display:none!important}.pane.print{display:block!important}body{background:#fff}th{position:static}}
 </style>
 </head>
@@ -1683,8 +1684,13 @@ function applyImport(imp, source, fileName, meta) {
 
 function updateDataChip() {
   const r = App.report;
-  if (!DS.src) { $('dataChip').innerHTML = 'Loading default data…'; return; }
-  $('dataChip').innerHTML = `<b>${DS.src === 'uploaded' ? 'Uploaded workbook' : 'Default data (GitHub)'}</b>: ${esc(DS.name)}<br>${r ? `${r.valid.toLocaleString('en-IN')} outlets · volumes for <b>${esc(r.period || 'no month found')}</b>${r.volumesUsable ? ' (KL per month)' : ''}` : 'choose a region'}`;
+  if (!DS.src) {
+    $('dataChip').innerHTML = DS.defaultState === 'failed'
+      ? `<b>🔴 Data Source: Repository Default Dataset — Load Failed</b><br>${esc(DEFAULT_DATA.name)} · use Upload new data`
+      : `<b>Data Source: Repository Default Dataset</b><br>Loading ${esc(DEFAULT_DATA.name)}…`;
+    return;
+  }
+  $('dataChip').innerHTML = `<b>${DS.src === 'uploaded' ? '🟠 Data Source: Uploaded Dataset' : '🟢 Data Source: Repository Default Dataset'}</b>: ${esc(DS.name)}<br>${r ? `${r.valid.toLocaleString('en-IN')} outlets · volumes for <b>${esc(r.period || 'no month found')}</b>${r.volumesUsable ? ' (KL per month)' : ''}` : 'choose a region'}`;
 }
 
 function applyVolumeAvailability() {
@@ -2051,24 +2057,25 @@ function recompute(now) {
 }
 
 /* =====================================================================
-   DEFAULT DATA FROM GITHUB + REGION SELECTION (v8.4)
+   DEFAULT DATA FROM THE REPOSITORY + REGION SELECTION
    ===================================================================== */
-/* ▼▼▼ CONFIGURATION — the only place to change the default workbook ▼▼▼ */
+/* ▼▼▼ CONFIGURATION — the only place to change the default workbook ▼▼▼
+   ONE canonical source: data/default_data.xlsx, resolved relative to this page.
+   On GitHub Pages (https://aditig1995.github.io/HPCL-IntelliMarket-AI/) that is
+   https://aditig1995.github.io/HPCL-IntelliMarket-AI/data/default_data.xlsx.
+   There is no second URL and no fallback. */
 const DEFAULT_DATA = {
   name: 'default_data.xlsx',
-  /* Raw file in the repository (CORS-enabled, works from GitHub Pages, any web server and file://) */
-  url: 'https://raw.githubusercontent.com/aditig1995/HPCL-IntelliMarket-AI/main/data/default_data.xlsx',
-  /* Same file, same site, used first when this page is served from the repository's GitHub Pages site */
-  pagesPath: 'data/default_data.xlsx',
-  /* Where to replace the file on GitHub */
-  repoPage: 'https://github.com/aditig1995/HPCL-IntelliMarket-AI/tree/main/data'
+  path: 'data/default_data.xlsx'
 };
 const REGIONS = ['Raipur', 'Bilaspur', 'Bhubaneswar', 'Sambalpur'];
 /* ▲▲▲ END OF CONFIGURATION ▲▲▲ */
 const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 
 /* The active dataset. It changes only when a new workbook has been read successfully. */
-const DS = { src: null, name: '', from: '', bytes: 0, loadedAt: null, sha: '', buf: null, sheets: [], regions: {}, others: [], region: null };
+const DS = { src: null, name: '', from: '', bytes: 0, loadedAt: null, sha: '', buf: null, sheets: [], regions: {}, others: [], region: null,
+  defaultState: 'idle', defaultError: '' };   // defaultState: idle | loading | ok | failed (repository default workbook)
+let _dsSeq = 0;   // every load (default or upload) gets a number; a slower, older load can never overwrite a newer one
 
 /* ---- Workbook reader: runs in a background worker so the page never freezes
    (reading the 5 MB workbook takes ~4 s). Falls back to the page itself. ---- */
@@ -2147,7 +2154,7 @@ function matchRegions(sheets) {
 /* ---- the loading / region screen ---- */
 function dsLine() {
   if (!DS.src) return '';
-  return `<b>${DS.src === 'default' ? 'Default data' : 'Uploaded workbook'}:</b> ${esc(DS.name)} · ${(DS.bytes / 1048576).toFixed(1)} MB · ${DS.src === 'default' ? 'from GitHub' : 'from this computer'}, loaded ${DS.loadedAt.toLocaleString('en-IN')}`;
+  return `<b>${DS.src === 'default' ? 'Repository Default Dataset' : 'Uploaded Dataset'}:</b> ${esc(DS.name)} · ${(DS.bytes / 1048576).toFixed(1)} MB · ${DS.src === 'default' ? 'from ' + esc(DEFAULT_DATA.path) : 'from this computer'}, loaded ${DS.loadedAt.toLocaleString('en-IN')}`;
 }
 function screen(html, closable) {
   const el = $('dataScreen');
@@ -2157,7 +2164,8 @@ function screen(html, closable) {
 }
 function hideScreen() { $('dataScreen').classList.remove('show'); }
 function dataButtons(extra) {
-  return `<div class="ds-actions">${extra || ''}<label class="ds-btn ghost" for="fileInput">⬆ Upload new data</label><button class="ds-btn ghost" type="button" data-act="download">⬇ Download default data</button></div>`;
+  const reload = !extra && DS.src === 'uploaded' ? '<button class="ds-btn ghost" type="button" data-act="retry">↻ Reload default data</button>' : '';
+  return `<div class="ds-actions">${extra || ''}${reload}<label class="ds-btn ghost" for="fileInput">⬆ Upload new data</label><button class="ds-btn ghost" type="button" data-act="download" ${canDownloadDefault() ? '' : 'disabled title="The repository default workbook has not been loaded"'}>⬇ Download default data</button></div>`;
 }
 function wireScreenButtons() {
   document.querySelectorAll('#dataScreen [data-act=download]').forEach(b => b.onclick = downloadDefault);
@@ -2193,43 +2201,78 @@ function showRegionScreen() {
   wireScreenButtons();
 }
 
-/* ---- fetching the default workbook ---- */
+/* ---- fetching the default workbook: ONE loader, ONE path, no fallback ---- */
+const defaultUrl = () => new URL(DEFAULT_DATA.path, window.location.href).href;
 async function fetchBytes(url, onProgress) {
   const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 90000);
   try {
-    const r = await fetch(url, { signal: ctl.signal, cache: 'no-cache' });
-    if (!r.ok) throw new Error(`HTTP ${r.status}${r.status === 404 ? ' — file not found at this address' : ''}`);
+    const r = await fetch(url, { signal: ctl.signal, cache: 'no-store' });   // always a fresh copy, never the browser cache
+    if (!r.ok) throw new Error(`HTTP ${r.status}${r.status === 404 ? ` — ${DEFAULT_DATA.name} not found at ${url}` : ` at ${url}`}`);
     const total = +r.headers.get('Content-Length') || 0;
     if (!r.body || !r.body.getReader) return await r.arrayBuffer();
     const reader = r.body.getReader(), parts = []; let got = 0;
     for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; onProgress(got, total); }
     const out = new Uint8Array(got); let o = 0; parts.forEach(p => { out.set(p, o); o += p.length; });
     return out.buffer;
-  } catch (e) { throw e.name === 'AbortError' ? new Error('no answer within 90 seconds') : e; }
+  } catch (e) { throw e.name === 'AbortError' ? new Error(`no answer within 90 seconds from ${url}`) : e; }
   finally { clearTimeout(tm); }
 }
+/* Drop the active dataset completely (buffer, parsed sheets, regions, results). */
+function resetDataset() {
+  Object.assign(DS, { src: null, name: '', from: '', bytes: 0, loadedAt: null, sha: '', buf: null, sheets: [], regions: {}, others: [], region: null });
+  clearAnalysis();
+}
+/* A failed repository load never leaves another workbook in its place. */
+function failDefault(detail) {
+  DS.defaultState = 'failed'; DS.defaultError = detail;
+  if (DS.src) resetDataset();
+  updateDataChip(); syncDownloadButtons();
+  console.error('[NRO Data] Repository default dataset could not be loaded\nPath: ' + DEFAULT_DATA.path + '\nResolved URL: ' + defaultUrl() + '\nError: ' + detail);
+  showError(`Default data could not be loaded from the repository: ${DEFAULT_DATA.path}`,
+    `<span class="small">${esc(detail)}</span><br>No other data is used in its place. Retry, or use <b>Upload new data</b> to analyse a workbook from this computer.`, true);
+}
 async function loadDefaultData() {
-  const urls = [];
-  if (/\.github\.io$/i.test(location.hostname)) urls.push(new URL(DEFAULT_DATA.pagesPath, location.href).href);
-  urls.push(DEFAULT_DATA.url);
-  const errs = [];
-  for (const u of urls) {
-    showLoading('Loading default data', `Downloading <b>${esc(DEFAULT_DATA.name)}</b> from GitHub…`, 0);
-    try {
-      const buf = await fetchBytes(u, (got, total) => {
-        showLoading('Loading default data', `Downloading <b>${esc(DEFAULT_DATA.name)}</b> from GitHub… ${(got / 1048576).toFixed(1)}${total ? ' of ' + (total / 1048576).toFixed(1) : ''} MB`, total ? Math.round(100 * got / total) : null);
-      });
-      if (buf.byteLength < 100) throw new Error('the file is empty');
-      await openWorkbook(buf, { src: 'default', name: DEFAULT_DATA.name, from: u });
-      return;
-    } catch (e) { errs.push(`${u.replace(/^https?:\/\//, '')}: ${e.message}`); }
+  const seq = ++_dsSeq, url = defaultUrl();
+  if (DS.src) resetDataset();                    // nothing from an earlier workbook survives a (re)load of the default
+  DS.defaultState = 'loading'; DS.defaultError = '';
+  updateDataChip(); syncDownloadButtons();
+  const msg = extra => `Downloading <b>${esc(DEFAULT_DATA.name)}</b> from the repository (<code>${esc(DEFAULT_DATA.path)}</code>)…${extra || ''}`;
+  showLoading('Loading default data', msg(), 0);
+  let buf;
+  try {
+    buf = await fetchBytes(url, (got, total) => {
+      if (seq !== _dsSeq) return;
+      showLoading('Loading default data', msg(` ${(got / 1048576).toFixed(1)}${total ? ' of ' + (total / 1048576).toFixed(1) : ''} MB`), total ? Math.round(100 * got / total) : null);
+    });
+    if (buf.byteLength < 100) throw new Error(`the file at ${url} is empty (${buf.byteLength} bytes)`);
+  } catch (e) {
+    if (seq === _dsSeq) failDefault(String(e && e.message || e));
+    return;
   }
-  showError('Default data could not be loaded', `The dashboard could not download <b>${esc(DEFAULT_DATA.name)}</b> from GitHub.<br><span class="small">${errs.map(esc).join('<br>')}</span><br>Check the internet connection and retry, or upload the workbook from this computer.`, true);
+  if (seq !== _dsSeq) return;                    // an upload or a newer reload started meanwhile
+  const sha = await sha256(buf);
+  if (seq !== _dsSeq) return;
+  const ok = await openWorkbook(buf, { src: 'default', name: DEFAULT_DATA.name, from: url, sha, seq });
+  if (!ok) return;
+  DS.defaultState = 'ok'; DS.defaultError = '';
+  updateDataChip(); syncDownloadButtons();
+  console.info(`[NRO Data]\nSource: Repository\nPath: ${DEFAULT_DATA.path}\nResolved URL: ${url}\nFile: ${DEFAULT_DATA.name}\nSize: ${buf.byteLength.toLocaleString('en-IN')} bytes (${(buf.byteLength / 1048576).toFixed(2)} MB)\nLoaded: ${DS.loadedAt.toISOString()}\nSHA-256: ${sha || 'not available in this browser'}`);
+}
+/* Download default data: the exact bytes loaded from data/default_data.xlsx. */
+function canDownloadDefault() { return DS.defaultState === 'ok'; }
+function syncDownloadButtons() {
+  const on = canDownloadDefault(), tip = on ? '' : 'The repository default workbook has not been loaded';
+  const b = $('btnDownloadDefault'); if (b) { b.disabled = !on; b.title = tip; }
+  document.querySelectorAll('#dataScreen [data-act=download]').forEach(x => { x.disabled = !on; x.title = tip; });
 }
 async function downloadDefault() {
+  if (!canDownloadDefault()) { toast('The repository default workbook has not been loaded.', 5000); return; }
   try {
-    let buf = DS.src === 'default' && DS.buf ? DS.buf : (DS.defaultBuf || null);
-    if (!buf) { toast('Downloading the default workbook…'); buf = await fetchBytes(DEFAULT_DATA.url, () => { }); DS.defaultBuf = buf; }
+    let buf = DS.src === 'default' && DS.buf ? DS.buf : null;
+    if (!buf) {                                   // an upload is active: fetch the same repository file again, fresh
+      toast(`Downloading ${DEFAULT_DATA.name} from ${DEFAULT_DATA.path}…`);
+      buf = await fetchBytes(defaultUrl(), () => { });
+    }
     downloadBlob(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), DEFAULT_DATA.name);
   } catch (e) { toast('The default workbook could not be downloaded: ' + e.message, 6000); }
 }
@@ -2237,31 +2280,35 @@ async function sha256(buf) { try { const h = await crypto.subtle.digest('SHA-256
 
 /* ---- open a workbook (default or uploaded). The active dataset is replaced only on success. ---- */
 async function openWorkbook(buf, meta) {
+  const isDef = meta.src === 'default';
   showLoading('Reading the workbook', `${esc(meta.name)} · ${(buf.byteLength / 1048576).toFixed(1)} MB — finding the region worksheets…`, null);
   let sheets;
   const head = new Uint8Array(buf.slice(0, 4)), isZip = head[0] === 0x50 && head[1] === 0x4B, isOle = head[0] === 0xD0 && head[1] === 0xCF;
   if (/\.(xlsx|xlsm)$/i.test(meta.name) && !isZip || /\.xls$/i.test(meta.name) && !isOle && !isZip) {
-    showError(meta.src === 'uploaded' ? 'This file could not be read' : 'The default workbook could not be read', `“${esc(meta.name)}” is not a valid Excel workbook (the file content is not in Excel format).${meta.src === 'uploaded' ? ' Nothing was changed.' : ''}`, meta.src === 'default');
-    return;
+    if (isDef) { failDefault(`${meta.from}: the file content is not an Excel workbook.`); return false; }
+    showError('This file could not be read', `“${esc(meta.name)}” is not a valid Excel workbook (the file content is not in Excel format). Nothing was changed.`, false);
+    return false;
   }
   try { sheets = await Book.open(buf); }
   catch (e) {
-    showError(meta.src === 'uploaded' ? 'This file could not be read' : 'The default workbook could not be read',
-      `“${esc(meta.name)}” is not a readable Excel workbook (${esc(e.message)}).${meta.src === 'uploaded' ? ' Nothing was changed.' : ''}`, meta.src === 'default');
-    return;
+    if (isDef) { if (meta.seq === _dsSeq) failDefault(`${meta.from}: not a readable Excel workbook (${e.message}).`); return false; }
+    showError('This file could not be read', `“${esc(meta.name)}” is not a readable Excel workbook (${esc(e.message)}). Nothing was changed.`, false);
+    return false;
   }
+  if (isDef && meta.seq !== _dsSeq) return false;   // superseded by an upload or a newer reload
   const { regions, others } = matchRegions(sheets);
   if (!REGIONS.some(R => regions[R].status === 'ok') && !others.length) {
     if (DS.src && DS.region && meta.src === 'uploaded') await Book.open(DS.buf).catch(() => { });   // keep the reader on the active workbook
     const why = REGIONS.map(R => { const g = regions[R]; return g.status === 'ambiguous' ? `${R}: ${g.sheets.length} worksheets match (${g.sheets.map(esc).join(', ')}) — ambiguous, so none is used` : g.status === 'nocoords' ? `${R}: worksheet “${esc(g.sheet)}” has no Latitude/Longitude columns` : null; }).filter(Boolean);
-    showError('No usable worksheet', `“${esc(meta.name)}” has no usable worksheet named after a region (${REGIONS.join(', ')}) with Latitude and Longitude columns. Worksheets found: ${sheets.map(s => '“' + esc(s.name) + '”').join(', ') || 'none'}.${why.length ? '<br>' + why.join('<br>') : ''}${meta.src === 'uploaded' ? '<br>Nothing was changed.' : ''}`, meta.src === 'default');
-    return;
+    if (isDef) { failDefault(`${meta.from}: no usable worksheet named after a region (${REGIONS.join(', ')}) with Latitude and Longitude columns. Worksheets found: ${sheets.map(x => x.name).join(', ') || 'none'}.`); return false; }
+    showError('No usable worksheet', `“${esc(meta.name)}” has no usable worksheet named after a region (${REGIONS.join(', ')}) with Latitude and Longitude columns. Worksheets found: ${sheets.map(s => '“' + esc(s.name) + '”').join(', ') || 'none'}.${why.length ? '<br>' + why.join('<br>') : ''}<br>Nothing was changed.`, false);
+    return false;
   }
-  if (meta.src === 'default') DS.defaultBuf = buf;
-  Object.assign(DS, { src: meta.src, name: meta.name, from: meta.from || '', bytes: buf.byteLength, loadedAt: new Date(), buf, sheets, regions, others, region: null, sha: '' });
-  sha256(buf).then(h => { DS.sha = h; });
+  Object.assign(DS, { src: meta.src, name: meta.name, from: meta.from || '', bytes: buf.byteLength, loadedAt: new Date(), buf, sheets, regions, others, region: null, sha: meta.sha || '' });
+  if (!DS.sha) sha256(buf).then(h => { if (DS.buf === buf) DS.sha = h; });
   clearAnalysis();
   showRegionScreen();
+  return true;
 }
 /* No results from the previous workbook / region may remain visible. */
 function clearAnalysis() {
@@ -2300,7 +2347,7 @@ $('fileInput').addEventListener('change', e => {
   e.target.value = '';
   const rd = new FileReader();
   showLoading('Reading uploaded workbook', `${esc(f.name)}…`, null);
-  rd.onload = ev => openWorkbook(ev.target.result, { src: 'uploaded', name: f.name, from: 'this computer' });
+  rd.onload = ev => { ++_dsSeq; openWorkbook(ev.target.result, { src: 'uploaded', name: f.name, from: 'this computer' }); };
   rd.onerror = () => showError('This file could not be read', 'The browser could not open the file. Nothing was changed.', false);
   rd.readAsArrayBuffer(f);
 });
@@ -2592,7 +2639,7 @@ function exportRows() {
 }
 function exportMeta() {
   const p = App.result.params;
-  return `HPCL NRO screening export ${new Date().toLocaleString('en-IN')}. Data: ${App.fileName} (${DS.src === 'uploaded' ? 'uploaded workbook' : 'default data from GitHub'}), region ${DS.region ? DS.region.name + ' — worksheet ' + DS.region.sheet : '—'}, volumes ${App.report.period} (KL). Territory: ${territoryName()}. ${App.filtered.length} locations pass all filters (all included). Active filters: ${activeFilterText()}. Radius ${p.radius} km; market basis ${Engine.BASIS_LABEL[p.volBasis]}; minimum ${p.minVol} KL; min ${p.minDistAny} km from any outlet; grouped within ${p.spacing} km. Screening output only — not a site approval or sales forecast.`;
+  return `HPCL NRO screening export ${new Date().toLocaleString('en-IN')}. Data: ${App.fileName} (${DS.src === 'uploaded' ? 'uploaded dataset' : 'repository default dataset, ' + DEFAULT_DATA.path}), region ${DS.region ? DS.region.name + ' — worksheet ' + DS.region.sheet : '—'}, volumes ${App.report.period} (KL). Territory: ${territoryName()}. ${App.filtered.length} locations pass all filters (all included). Active filters: ${activeFilterText()}. Radius ${p.radius} km; market basis ${Engine.BASIS_LABEL[p.volBasis]}; minimum ${p.minVol} KL; min ${p.minDistAny} km from any outlet; grouped within ${p.spacing} km. Screening output only — not a site approval or sales forecast.`;
 }
 function exportSites(kind) {
   if (!App.result || !(App.filtered || []).length) { toast('Nothing to export — no location passes the current filters.'); return; }
@@ -3073,7 +3120,7 @@ const AUDIT = [
    'All radius-dependent values are recomputed from outlet neighbour lists on every change (debounced 120 ms). The threshold applies to the product chosen (MS + HSD, MS or HSD), in KL for the detected month, and is switched off if month or unit is unknown.', 'Engine tests at radius 1, 3, 5, 10, 20 km and thresholds 0, 100, 500, 1,000, 5,000 KL: every catchment total equals a brute-force sum over outlets within that distance; raising the threshold never adds a location; no location falls below the threshold.'],
   ['Filters could be relaxed to produce more sites (v6 behaviour)', 'The v6 engine loosened the minimum volume and other rules when few sites passed. v7–v8 removed that logic; v8.4 re-audited every step.', 'Every rule is applied exactly as set; zero results show a plain message with a “Review filters” button that changes nothing by itself. Map, shortlist, KPIs, details and exports all use the same filtered set; the table’s Top-N limit affects only rows on screen.', 'Browser test: minimum market 0 → 5,000 KL, distance from HPCL 0 → 10 km, road type NH only, zero-result case; exports counted against the filtered set.'],
   ['Radius changes could leave figures looking stale', 'Recalculation was debounced without any visible “updating” state.', 'Every radius change re-runs the full screening; results are dimmed and the status shows “updating” until the new figures are ready.', 'Browser test at 1, 3, 5, 10 and 20 km; candidate coordinates compared before and after.'],
-  ['Default data was built into the page', 'v8 embedded one worksheet in the HTML, so a new month needed a new HTML file.', 'The workbook is downloaded from GitHub on opening (one configuration block, DEFAULT_DATA), read in a background worker, and the user picks a region worksheet. Upload replaces it only for this session.', 'Browser test against the real raw GitHub file; failure, retry, invalid file and missing-worksheet cases.'],
+  ['Default data was built into the page', 'v8 embedded one worksheet in the HTML, so a new month needed a new HTML file.', 'The workbook is downloaded on opening from the repository path data/default_data.xlsx (one configuration block, DEFAULT_DATA, no fallback), read in a background worker, and the user picks a region worksheet. Upload replaces it only for this session.', 'Browser test against the repository file data/default_data.xlsx; failure, retry, invalid file and missing-worksheet cases.'],
   ['District casing and spelling', '“BASTAR”/“Bastar”, “DURG”/“Durg” etc. appeared as separate districts.', 'District names are trimmed and title-cased. Near-identical spellings (e.g. “Rajanangaon” / “Rajnandgaon”) are reported, not silently merged.', 'Actual file: 18 districts after normalising; 1 spelling variant reported.'],
   ['Premium “Power” petrol', 'HPCL rows report Power beside MS. Adding it to MS would double count in months where MS already includes it.', 'Per row, the workbook’s own TMF decides: if TMF = MS + HSD, Power is already inside MS; if TMF = MS + Power + HSD, it is added.', 'Aug 2026: 128 HPCL outlets report Power, all already inside MS per TMF.']
 ];
@@ -3083,7 +3130,7 @@ function renderMethod() {
   $('methodBody').innerHTML = `
   <h2>How to use this dashboard (Sales Officer guide)</h2>
   <ol>
-    <li><b>Open the dashboard.</b> It downloads the default workbook (<code>${esc(DEFAULT_DATA.name)}</code>) from GitHub by itself — wait for the progress bar to finish.</li>
+    <li><b>Open the dashboard.</b> It downloads the default workbook (<code>${esc(DEFAULT_DATA.path)}</code>) from the repository by itself — wait for the progress bar to finish.</li>
     <li><b>Select your region.</b> Choose Raipur, Bilaspur, Bhubaneswar or Sambalpur. Only that worksheet is used. “Change region” in the header switches at any time; nothing from the previous region stays on screen.</li>
     <li><b>Choose a District</b> (and Sales Area if you like). The map zooms there and that district's roads are loaded (about a minute the first time, instant afterwards).</li>
     <li><b>Apply filters.</b> Catchment radius, market type, minimum existing market and minimum distance from HPCL are in the filter bar; road types, confidence and grouping are under “More settings”. The results always obey every filter exactly — if nothing passes, the dashboard says so instead of loosening a filter.</li>
@@ -3138,6 +3185,7 @@ function renderMethod() {
   wireControls(); syncMinVol('num'); updateRegionChip(); updateDataChip();
   $('btnRegion').addEventListener('click', () => { if (DS.src) showRegionScreen(); else loadDefaultData(); });
   $('btnDownloadDefault').addEventListener('click', downloadDefault);
+  syncDownloadButtons();
   restoreRoads().then(() => { if (DS.region && App.outlets.length && attachStore()) renderStatus(); });
   loadDefaultData();
   const t0 = Date.now();
