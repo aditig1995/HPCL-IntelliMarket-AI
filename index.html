@@ -410,6 +410,9 @@ th.num{text-align:right;}
 .act-winback{color:#ad1457;}
 .act-intel{color:#4527a0;}
 .act-monitor{color:#78909c;}
+.act-nfb{color:#8d6e00;}
+/* v9.1 — secondary NFB routing under the Suggested Stakeholder */
+.nfb-sub{font-size:10.5px;color:#8d6e00;margin-top:2px;white-space:nowrap;}
 
 /* ============ ROOT CAUSE + EXPLAINABILITY ============ */
 /* The root-cause chip sits inside the existing Reason cell so the table keeps
@@ -605,7 +608,7 @@ th.num{text-align:right;}
 .pop-h.h-hist{color:var(--text-mid);}
 
 /* Actionable Volume Potential kept visually prominent: it is the one number that
-   tells the Sales Officer how much volume is worth going after at this site. The
+   tells the Sales Area Manager how much volume is worth going after at this site. The
    two components that build it are printed underneath so the headline figure is
    never read as a single undifferentiated claim. */
 .pop-hero{margin:6px 0 8px;padding:8px 11px;border-radius:9px;background:#fff7f0;
@@ -1723,7 +1726,7 @@ table.cx thead tr.th-grp + tr th,#actionTable.cx thead tr.th-grp + tr th{top:0;}
     <div class="card kpi-card kpi-yellow clickable" onclick="Actions.setUrgency('This Month')" data-af="This Month" role="button" tabindex="0"><div class="icon-badge"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg></div><div class="label">This Month</div><div class="val num" id="acMonth">0</div><div class="sub">Planned programme</div></div>
     <div class="card kpi-card kpi-green clickable" onclick="Actions.setUrgency('Routine')" data-af="Routine" role="button" tabindex="0"><div class="icon-badge"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg></div><div class="label">Monitoring Only</div><div class="val num" id="acRoutine">0</div><div class="sub">No intervention needed</div></div>
     <div class="card kpi-card kpi-blue"><div class="icon-badge"><svg class="ico" aria-hidden="true"><use href="#i-rupee"/></svg></div><div class="label">Expected Recovery</div><div class="val num" id="acImpact">0</div><div class="sub">KLPM if actions land
-      <span class="info-icon" style="background:rgba(0,61,165,.08);">💡<span class="info-tooltip"><b>Expected Volume Recovery</b> is sized by the AI Decision Engine per product (MS and HSD separately) and summed. It is <b>not</b> the same measure as Actionable Volume Potential.<br><br>Actionable Volume Potential answers <i>how much volume is worth pursuing at this outlet</i>. Expected Volume Recovery answers the narrower question <i>how much of that is likely to land from the one action being recommended this cycle</i> — so it is always the smaller number.<br><br>Recoverable base = gap to the best sustained 12-month run-rate + recoverable competitive leakage + unclaimed trading-area growth. That base is multiplied by the action effectiveness factor, a market multiplier and the engine's confidence in its own diagnosis.<br><br>Only products the engine judges weak contribute. Effectiveness factors are conservative planning assumptions, not forecasts:<br>Immediate Visit 55% · Fleet Visit 45% · Win-Back Campaign 45% · Dealer Meeting 40% · Customer Acquisition 35% · Engineering 35% · Marketing 30% · CSA 25% · Competitor Intelligence 20% · Monitoring 5%.</span></span>
+      <span class="info-icon" style="background:rgba(0,61,165,.08);">💡<span class="info-tooltip"><b>Expected Volume Recovery</b> is sized by the AI Decision Engine per product (MS and HSD separately) and summed. It is <b>not</b> the same measure as Actionable Volume Potential.<br><br>Actionable Volume Potential answers <i>how much volume is worth pursuing at this outlet</i>. Expected Volume Recovery answers the narrower question <i>how much of that is likely to land from the one action being recommended this cycle</i> — so it is always the smaller number.<br><br>Recoverable base = gap to the best sustained 12-month run-rate + recoverable competitive leakage + unclaimed trading-area growth. That base is multiplied by the action effectiveness factor, a market multiplier and the engine's confidence in its own diagnosis.<br><br>Only products the engine judges weak contribute. Effectiveness factors are conservative planning assumptions, not forecasts:<br>Outlet Visit &amp; Corrective Action 55% · Fleet Business Development 45% · Customer Win-Back 45% · Dealer Review 40% · Fleet &amp; Bulk Customer Acquisition 35% · Engineering Rectification 35% · Marketing Intervention 30% · Forecourt Service (CSA) 25% · Market / Competitor Assessment 20% · Routine Monitoring 5%. NFB Development is sized on the intervention it takes the lead from, so routing to the Non Fuel Business Officer never changes the figure.</span></span>
     <span class="pair-line" id="acImpactPair"></span></div></div>
   </div>
 
@@ -1733,7 +1736,7 @@ table.cx thead tr.th-grp + tr th,#actionTable.cx thead tr.th-grp + tr th{top:0;}
 
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
       <input type="text" id="actionSearch" class="search-input" placeholder="Search outlet, trading area, district…">
-      <select id="actionOwnerFilter" class="search-input" style="min-width:210px;"><option value="">All Owners</option></select>
+      <select id="actionStakeholderFilter" class="search-input" style="min-width:230px;" title="Filter by Suggested Stakeholder"><option value="">All Stakeholders</option></select>
       <button type="button" class="btn-ghost cx-toggle" id="actionDetailToggle" aria-pressed="false" title="Show or hide the separate MS and HSD columns"><svg class="ico" aria-hidden="true"><use href="#i-columns"/></svg>Show MS / HSD detail</button>
       <button class="btn-ghost" onclick="Actions.buildRoute()" title="Open a Google Maps route through the top visits currently listed"><svg class="ico" aria-hidden="true"><use href="#i-route"/></svg>Build visit route</button>
       <!-- ===== NEW (v4.5): Dealer Attack list. Export only — no new tab,
@@ -1747,8 +1750,10 @@ table.cx thead tr.th-grp + tr th,#actionTable.cx thead tr.th-grp + tr th{top:0;}
       <summary><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg>How this table works</summary>
       <p>Rows are sorted by Priority Score, so the top row is the outlet that deserves today's visit. Click a row to open its full
         diagnosis, action plan and 24-month trend. Click a Trading Area name to open it on the map. Use the urgency cards above to
-        plan the week and the action-type chips to build a route for one team.</p>
-      <p>Priority, Recommended Action and Expected KLPM are unchanged and use the combined MS + HSD view.
+        plan the week and the intervention chips to build a route for one team. <b>Recommended Intervention</b> is what needs to be done;
+        <b>Suggested Stakeholder</b> is the function that should handle it — CRM, Sales Area Manager, Regional Coordinator,
+        Fleet and Marketing Officer, Non Fuel Business Officer or Retail Engineering.</p>
+      <p>Priority, Recommended Intervention and Expected KLPM are unchanged and use the combined MS + HSD view.
         <b>Product Issue</b> shows which product is driving each outlet. MS and HSD opportunity are calculated independently and may not sum exactly to the combined opportunity.</p>
     </details>
     <div class="table-wrap tall">
@@ -1774,10 +1779,10 @@ table.cx thead tr.th-grp + tr th,#actionTable.cx thead tr.th-grp + tr th{top:0;}
           <th class="sortable num p-hsd" data-k="hsdActionable" data-xname="HSD Actionable Potential (KLPM)" title="HSD opportunity, sized independently. MS and HSD opportunity components are independently calculated and may not sum exactly to the combined opportunity." data-cw="72">HSD</th>
           <th class="sortable num" data-k="priorityScore">Priority</th>
           <th class="cell-reason">Reason</th>
-          <th class="cell-plan" title="A short execution paragraph for the Sales Officer, written from this outlet's own diagnosis, its selected MS and HSD field actions and the recommended action. The Reason says why; the Action Plan says what to do.">Action Plan</th>
-          <th class="sortable" data-k="action">Recommended Action</th>
+          <th class="cell-plan" title="A short execution paragraph for the Suggested Stakeholder, written from this outlet's own diagnosis, its selected MS and HSD field actions and the Recommended Intervention. The Reason says why; the Action Plan says what to do.">Action Plan</th>
+          <th class="sortable" data-k="intervention" title="WHAT needs to be done. The icon and colour show the action type.">Recommended Intervention</th>
           <th class="sortable num" data-k="expectedImpact">Expected<br><span style="font-weight:400;text-transform:none;">KLPM</span></th>
-          <th class="sortable" data-k="owner">Suggested Owner</th>
+          <th class="sortable" data-k="stakeholder" title="WHO should handle it: CRM, Sales Area Manager, Regional Coordinator, Fleet and Marketing Officer, Non Fuel Business Officer or Retail Engineering. “+ Non Fuel Business Officer (NFB)” marks a secondary NFB opportunity routed alongside the lead intervention.">Suggested Stakeholder</th>
           <th class="sortable" data-k="urgencyRank">Urgency</th>
           <th data-noexport="1">Go</th></tr></thead>
         <tbody id="actionTableBody"></tbody>
@@ -1899,7 +1904,7 @@ table.cx thead tr.th-grp + tr th,#actionTable.cx thead tr.th-grp + tr th{top:0;}
           <th class="num p-tot" data-xname="TA Combined Share Change (pp)" title="Combined MS + HSD share movement.">Comb.</th>
           <th class="num">Distance from TA Centre</th>
           <th class="num">Nearest Competitor</th>
-          <th>Recommended Action</th>
+          <th>Recommended Intervention</th>
           <th data-noexport="1">Go</th></tr></thead>
           <tbody id="taDetailOutlets"></tbody>
         </table>
@@ -4994,7 +4999,7 @@ const Competitive = (() => {
    see comparable HPCL sites in the same corridor running materially higher. An
    outlet whose best-ever year was 55 KLPM in a corridor that has since grown
    30% is not capped at 55. Reporting 55 as the whole opportunity understates
-   the prize and sends the Sales Officer out with the wrong target.
+   the prize and sends the Sales Area Manager out with the wrong target.
 
    NEW, three measures:
 
@@ -5359,6 +5364,137 @@ const Opportunity = (() => {
   }
 
   return { compute, computeProduct, RATE, OVERLAP_W, overlapFactor };
+})();
+
+/* ============================ STAKEHOLDER ARCHITECTURE ============================
+   NEW (v9.1): one source of truth for WHO handles an outlet recommendation.
+
+   Two concepts are kept deliberately separate everywhere in the dashboard:
+     Recommended Intervention = WHAT needs to be done   (o.intervention)
+     Suggested Stakeholder    = WHO / which function    (o.stakeholder)
+   The internal action-type key (o.action — 'Fleet Visit', 'Engineering Support'
+   and so on) is unchanged: it still drives the badge icon and colour, the
+   action-type chips, the effectiveness assumption and every existing count.
+
+   Exactly six stakeholder functions are recognised. Every action type resolves
+   to exactly one of them, so tables, filters, counts, narrative and exports can
+   never carry any other name.
+
+   Mapping from the previous terminology (documentation only — none of these
+   old names is used as a value anywhere in the application):
+     Regional Manager                          -> CRM
+     Sales Officer, Field Officer, Retail Officer (CSA team) -> Sales Area Manager
+     Market Intelligence                       -> Regional Coordinator
+     Marketing Officer, Fleet & Industrial Sales Officer -> Fleet and Marketing Officer
+     Engineering / Projects                    -> Retail Engineering
+     NFB opportunity (new)                     -> Non Fuel Business Officer */
+const Stakeholder = (() => {
+
+  const CRM  = 'CRM';
+  const SAM  = 'Sales Area Manager';
+  const RC   = 'Regional Coordinator';
+  const FMO  = 'Fleet and Marketing Officer';
+  const NFBO = 'Non Fuel Business Officer';
+  const RE   = 'Retail Engineering';
+  const LIST = [CRM, SAM, RC, FMO, NFBO, RE];
+
+  /* Action type -> Suggested Stakeholder */
+  const BY_ACTION = {
+    'Immediate Visit': SAM,          // outlet visit & corrective action
+    'Dealer Meeting': SAM,           // dealer / outlet relationship
+    'Fleet Visit': FMO,              // fleet opportunity
+    'Win-Back Campaign': SAM,        // outlet-level customer win-back
+    'Competitor Intelligence': RC,   // competitor / market intelligence
+    'CSA Activity': SAM,             // forecourt field action
+    'Engineering Support': RE,       // engineering issue
+    'Marketing Activity': FMO,       // marketing opportunity
+    'Customer Acquisition': FMO,     // HSD-led fleet / bulk customer acquisition
+    'NFB Development': NFBO,         // non-fuel business opportunity
+    'Monitoring Only': SAM           // routine monitoring in the beat plan
+  };
+
+  /* Action type -> Recommended Intervention (what is to be done) */
+  const INTERVENTION = {
+    'Immediate Visit': 'Outlet Visit & Corrective Action',
+    'Dealer Meeting': 'Dealer Review & Performance Correction',
+    'Fleet Visit': 'Fleet Business Development',
+    'Win-Back Campaign': 'Customer Win-Back Programme',
+    'Competitor Intelligence': 'Market / Competitor Assessment',
+    'CSA Activity': 'Forecourt Service (CSA) Improvement',
+    'Engineering Support': 'Engineering Rectification',
+    'Marketing Activity': 'Marketing Intervention',
+    'Customer Acquisition': 'Fleet & Bulk Customer Acquisition',
+    'NFB Development': 'NFB Development',
+    'Monitoring Only': 'Routine Monitoring'
+  };
+  /* Regional-level escalation: an outlet that has stopped selling altogether
+     (the existing "latest month zero, history non-zero" rule that already
+     forces an Immediate Visit and that the Exception Inbox reports as a
+     Dormant outlet). No new threshold — the engine's own test is reused. */
+  const ESCALATION_INTERVENTION = 'Regional Escalation & Outlet Revival';
+
+  /* NFB plays — the engine's EXISTING playbook entries whose substance is
+     non-fuel business (convenience retail, lubricant / add-on sales, driver
+     amenities and facilities). NFB is identified only when the engine has
+     already shortlisted one of these for a weak product on its own scoring;
+     nothing new is scored and no threshold is introduced. */
+  const NFB_PLAYS = {
+    MS: ['Convenience and retail experience upgrade', 'Lubricant and add-on cross-selling'],
+    HSD: ['Driver amenities and overnight facilities']
+  };
+  /* The base interventions NFB can take the lead from: site-experience and
+     marketing interventions, where non-fuel business is a like-for-like lever.
+     Dealer, fleet, competitive, engineering and escalation calls are never
+     displaced — NFB is carried beside them as a secondary opportunity. */
+  const NFB_CAN_LEAD = ['CSA Activity', 'Marketing Activity'];
+
+  function nfbOpportunity(plan, o) {
+    const hits = [];
+    ['MS', 'HSD'].forEach(k => {
+      const side = plan && plan[k];
+      if (!side || !side.weak || !side.plays) return;
+      side.plays.forEach(p => { if (NFB_PLAYS[k].indexOf(p.t) !== -1) hits.push({ product: k, play: p.t, cause: side.cause }); });
+    });
+    if (!hits.length) return { present: false, lead: false, hits: [], basis: '' };
+    const row = (o && o.row) || {};
+    const hw = /highway/i.test(String(row.Area_Type || '')) || !!String(row.Highway || '').trim();
+    const basis = 'The engine\u2019s own ' + hits.map(h => h.product + ' strategy (' + h.cause + ') shortlisted \u201c' + h.play + '\u201d')
+      .join(' and ') + ', so non-fuel business is a genuine lever for sales at this outlet' +
+      (hw ? ' \u2014 a highway-facing site, where convenience retail and driver facilities decide the stop' : '') + '.';
+    return { present: true, lead: false, hits: hits, basis: basis };
+  }
+
+  /* Resolve the final action, intervention and stakeholder for one outlet.
+     baseAction is what the existing cascade chose; it is kept on the result
+     so volume sizing continues to use the unchanged effectiveness assumption. */
+  function resolve(baseAction, plan, o, F) {
+    const nfb = nfbOpportunity(plan, o);
+    let action = baseAction;
+    if (nfb.present && NFB_CAN_LEAD.indexOf(baseAction) !== -1) { action = 'NFB Development'; nfb.lead = true; }
+    const escalate = baseAction === 'Immediate Visit' && F && F.latest <= 0 && F.peak > 0 &&
+      (!o || o.latestReported !== false);
+    return {
+      action: action,
+      baseAction: baseAction,
+      escalate: escalate,
+      stakeholder: escalate ? CRM : (BY_ACTION[action] || SAM),
+      intervention: escalate ? ESCALATION_INTERVENTION : (INTERVENTION[action] || action),
+      nfb: nfb
+    };
+  }
+
+  const forAction = a => BY_ACTION[a] || SAM;
+  const interventionOf = a => INTERVENTION[a] || a;
+  /* Lower-case an intervention for use inside a sentence, keeping acronyms
+     (NFB, CSA) intact. */
+  const inSentence = s => String(s || '').split(' ')
+    .map(w => /^[A-Z]{2,}/.test(w.replace(/[()]/g, '')) ? w : w.toLowerCase()).join(' ');
+  /* Stakeholder as it reads inside a sentence: "the Sales Area Manager",
+     "the CRM", "Retail Engineering". */
+  const phrase = s => s === RE ? RE : 'the ' + s;
+
+  return { LIST, CRM, SAM, RC, FMO, NFBO, RE, BY_ACTION, INTERVENTION, NFB_PLAYS, NFB_CAN_LEAD,
+           ESCALATION_INTERVENTION, nfbOpportunity, resolve, forAction, interventionOf, inSentence, phrase };
 })();
 
 /* ============================ AI DECISION ENGINE ============================ */
@@ -5778,7 +5914,7 @@ const AIEngine = (() => {
            site has no proven headroom of its own. Dispensing units, frontage,
            access and carriageway side are not in this workbook and a constant
            cannot explain a change. Report it, size it, but do NOT send a
-           Sales Officer back to it every cycle as a dealer failure. */
+           Sales Area Manager back to it every cycle as a dealer failure. */
         add('Recovery Opportunity', clamp(lvl * 0.30, 0, 28) * w,
           headline + ' The gap is long-standing and has not moved, so part of it is likely to be site capacity rather than execution.');
         add('Competitive Attack', clamp(lvl * 0.10, 0, 9) * w, '');
@@ -6677,17 +6813,20 @@ const AIEngine = (() => {
 
   function askBank(X) {
     const a = X.action, u = X.urgency, tot = X.plan.expectedTotal, conf = X.conf;
-    const owner = X.owner || 'the field team';
+    /* v9.1 — the intervention is spoken, the stakeholder is named as-is
+       (never lower-cased: CRM and the officer titles are proper names). */
+    const aT = X.actionText || Stakeholder.inSentence(Stakeholder.interventionOf(a));
+    const owner = X.owner || Stakeholder.phrase(Stakeholder.forAction(a));
     const when = WHEN[u] || u.toLowerCase();
     /* An action was still recommended but no volume has been sized against it.
        Say that plainly rather than claiming a number, and never tell the user
        no field time is needed while the Action column says otherwise. */
     if (tot <= 0.5 && a !== 'Monitoring Only') return [
-      () => a.toLowerCase() + ' is the right next step ' + when + ', though no volume has been sized against it yet',
-      () => 'go with ' + a.toLowerCase() + ' ' + when + ' — this is a positional call rather than a volume-recovery one',
-      () => 'put ' + owner.toLowerCase() + ' on ' + a.toLowerCase() + ' ' + when + ', the case being to protect standing rather than to win back litres',
-      () => a.toLowerCase() + ' ' + when + ', with the objective being information and position rather than an immediate volume claim',
-      () => 'the recommendation is ' + a.toLowerCase() + ', ' + when + ', owned by ' + owner.toLowerCase()
+      () => aT + ' is the right next step ' + when + ', though no volume has been sized against it yet',
+      () => 'go with ' + aT + ' ' + when + ' — this is a positional call rather than a volume-recovery one',
+      () => 'put ' + owner + ' on ' + aT + ' ' + when + ', the case being to protect standing rather than to win back litres',
+      () => aT + ' ' + when + ', with the objective being information and position rather than an immediate volume claim',
+      () => 'the recommendation is ' + aT + ', ' + when + ', owned by ' + owner
     ];
     if (tot <= 0.5) return [
       () => 'monitor and re-check against next cycle before committing anybody\u2019s day to it',
@@ -6701,14 +6840,14 @@ const AIEngine = (() => {
       () => 'leave the dealer to run it and check the position again after the next close'
     ];
     return [
-      () => a.toLowerCase() + ' is the first move, ' + when + ', with roughly ' + f0(tot) + ' KLPM in play',
-      () => 'put ' + owner.toLowerCase() + ' on it — ' + a.toLowerCase() + ', ' + when,
-      () => 'the first call is ' + a.toLowerCase() + ' ' + when + ', and ' + f0(tot) + ' KLPM is the size of the prize at ' + conf.label.toLowerCase() + ' confidence',
-      () => 'start with ' + a.toLowerCase() + ' rather than a general review, and do it ' + when,
-      () => 'schedule ' + a.toLowerCase() + ' ' + when + ' and work back from the ' + f0(tot) + ' KLPM that looks recoverable',
-      () => 'what happens next is ' + a.toLowerCase() + ' ' + when + ', owned by ' + owner.toLowerCase(),
-      () => 'send ' + owner.toLowerCase() + ' for ' + a.toLowerCase() + ' ' + when + ', targeting the ' + f0(tot) + ' KLPM identified',
-      () => 'the ask is ' + a.toLowerCase() + ', ' + when + ', against ' + f0(tot) + ' KLPM of recoverable run-rate'
+      () => aT + ' is the first move, ' + when + ', with roughly ' + f0(tot) + ' KLPM in play',
+      () => 'put ' + owner + ' on it — ' + aT + ', ' + when,
+      () => 'the first call is ' + aT + ' ' + when + ', and ' + f0(tot) + ' KLPM is the size of the prize at ' + conf.label.toLowerCase() + ' confidence',
+      () => 'start with ' + aT + ' rather than a general review, and do it ' + when,
+      () => 'schedule ' + aT + ' ' + when + ' and work back from the ' + f0(tot) + ' KLPM that looks recoverable',
+      () => 'what happens next is ' + aT + ' ' + when + ', owned by ' + owner,
+      () => 'send ' + owner + ' for ' + aT + ' ' + when + ', targeting the ' + f0(tot) + ' KLPM identified',
+      () => 'the ask is ' + aT + ', ' + when + ', against ' + f0(tot) + ' KLPM of recoverable run-rate'
     ];
   }
 
@@ -6854,16 +6993,16 @@ const AIEngine = (() => {
     const F = X.F, S = X.S, ms = X.plan.MS, hsd = X.plan.HSD;
     const side = ms.weak && hsd.weak ? 'MS and HSD' : ms.weak ? 'MS' : hsd.weak ? 'HSD' : 'neither product';
     const bank = [
-      () => X.win.cause + ' on ' + side + '; ' + X.action.toLowerCase() + ' ' + X.urgency.toLowerCase() +
+      () => X.win.cause + ' on ' + side + '; ' + X.actionText + ' ' + X.urgency.toLowerCase() +
             ', ' + f0(X.plan.expectedTotal) + ' KLPM at stake, risk ' + S.riskBand.toLowerCase(),
       () => f0(F.avgCurr) + ' KLPM site at ' + pc(F.growthPct) + ' — diagnosed ' + X.win.cause.toLowerCase() +
             ', ' + side + ' affected, ' + X.urgency.toLowerCase() + ' priority',
       () => X.win.cause + ' (' + X.conf.label.toLowerCase() + ' confidence) — ' + side +
-            ' carrying the weakness, ' + f0(X.plan.expectedTotal) + ' KLPM recoverable via ' + X.action.toLowerCase(),
+            ' carrying the weakness, ' + f0(X.plan.expectedTotal) + ' KLPM recoverable via ' + X.actionText,
       () => 'Risk ' + f0(S.risk) + '/100, dealer health ' + f0(S.dealerHealth) + '/100, competition ' +
-            f0(S.competition) + '/100 → ' + X.win.cause.toLowerCase() + ', ' + X.action.toLowerCase(),
+            f0(S.competition) + '/100 → ' + X.win.cause.toLowerCase() + ', ' + X.actionText,
       () => side + ' under pressure at a ' + F.taState.toLowerCase() + ' ' + F.ta + ' site; primary cause ' +
-            X.win.cause.toLowerCase() + ', action ' + X.action.toLowerCase() + ' ' + X.urgency.toLowerCase()
+            X.win.cause.toLowerCase() + ', action ' + X.actionText + ' ' + X.urgency.toLowerCase()
     ];
     const f = Narrative.varied('sum:' + X.win.cause, bank, r);
     return f ? f() : X.win.cause;
@@ -6913,7 +7052,7 @@ const AIEngine = (() => {
      not a shorter answer, it is a wrong one.
 
      The clause is written to do one specific job — say plainly which of
-     the two readings is carrying the recommendation, so a Sales Officer
+     the two readings is carrying the recommendation, so a Sales Area Manager
      is never left to reconcile "healthy" with "go and see the dealer". */
   function relativeNote(X) {
     const F = X.F, R = F.rel;
@@ -6959,30 +7098,21 @@ const AIEngine = (() => {
            ' confidence, about ' + f0(R.recoverableKLPM) + ' KLPM judged recoverable.';
   }
 
-  /* Owner hints, so the ask can name who goes. Mirrors the Action Centre's
-     own owner map; kept local so the engine has no dependency on it. */
-  const OWNER_HINT = {
-    'Immediate Visit': 'the Sales Officer with the Area Manager',
-    'Dealer Meeting': 'the Sales Officer',
-    'Fleet Visit': 'the Fleet and Industrial Sales Officer',
-    'Win-Back Campaign': 'the Sales Officer with CRM',
-    'Competitor Intelligence': 'the Sales Officer on market intelligence',
-    'CSA Activity': 'the Retail Officer and the CSA team',
-    'Engineering Support': 'Engineering',
-    'Marketing Activity': 'the Marketing Officer',
-    'Customer Acquisition': 'the Sales Officer with CRM',
-    'Monitoring Only': 'the Field Officer'
-  };
+  /* ===== CHANGED (v9.1): stakeholder hints now come from the single
+     Stakeholder architecture, so the narrative can only ever name one of
+     the six authorised stakeholder functions. The per-outlet resolution
+     (including CRM escalation and NFB routing) is passed in as `res`. ===== */
 
   /* Assemble everything the writing layer needs, then write. Called once per
      outlet, after the diagnosis, the product plans, the confidence and the
      expected recovery are all settled — the prose is written from the
      conclusion, never the other way round. */
-  function writeAssessment(o, F, win, ranked, health, plan, conf, S, action, urgency) {
+  function writeAssessment(o, F, win, ranked, health, plan, conf, S, action, urgency, res) {
     const X = {
       o: o, name: o.name, F: F, S: S, win: win, ranked: ranked, health: health,
       plan: plan, conf: conf, action: action, urgency: urgency,
-      owner: OWNER_HINT[action] || 'the field team',
+      owner: Stakeholder.phrase(res ? res.stakeholder : Stakeholder.forAction(action)),
+      actionText: Stakeholder.inSentence(res ? res.intervention : Stakeholder.interventionOf(action)),
       seed: seedOf(o),
       kpi: kpiEvidence(F, S, plan, win.cause),
       splitKey: (plan.MS.weak ? 'M' : '') + (plan.HSD.weak ? 'H' : '') || 'N'
@@ -7037,11 +7167,17 @@ const AIEngine = (() => {
     'Immediate Visit': 0.55, 'Dealer Meeting': 0.40, 'Fleet Visit': 0.45,
     'Win-Back Campaign': 0.45, 'Customer Acquisition': 0.35, 'Engineering Support': 0.35,
     'Marketing Activity': 0.30, 'CSA Activity': 0.25, 'Competitor Intelligence': 0.20,
+    /* v9.1 — listed for completeness only. Volume is always sized on the
+       base action the cascade chose (see analyse), so routing an outlet to
+       NFB Development never changes its expected recovery. */
+    'NFB Development': 0.25,
     'Monitoring Only': 0.05
   };
 
-  /* The lead action must stay inside the ten existing action types so every
-     chip, badge, owner filter, map colour and export column keeps working. */
+  /* The lead action must stay inside the existing action types so every
+     chip, badge, stakeholder filter, map colour and export column keeps
+     working. (v9.1: NFB Development is added afterwards by Stakeholder.resolve,
+     never inside this cascade.) */
   function leadAction(cause, F, plan, health) {
     const hsdLed = plan.HSD.weak && (!plan.MS.weak || plan.HSD.health.sev >= plan.MS.health.sev);
     const severe = health.sev >= 62;
@@ -7226,8 +7362,16 @@ const AIEngine = (() => {
                     plan.HSD.weak ? plan.HSD.health.sev : plan.HSD.health.sev * 0.5)
     };
 
-    const action = leadAction(win.cause, F, plan, overallHealth);
-    const eff = EFFECT[action] || 0.2;
+    /* ===== CHANGED (v9.1): the cascade's choice is kept as the BASE action
+       and passed through the Stakeholder architecture, which (a) routes an
+       engine-identified NFB opportunity to NFB Development where the base is
+       a site-experience or marketing intervention, (b) escalates a dormant
+       outlet to CRM, and (c) names the one Suggested Stakeholder. Sizing
+       stays on the base action, so every KLPM figure is unchanged. ===== */
+    const baseAction = leadAction(win.cause, F, plan, overallHealth);
+    const res = Stakeholder.resolve(baseAction, plan, o, F);
+    const action = res.action;
+    const eff = EFFECT[baseAction] || 0.2;
     plan.MS.expected = expectedRecovery(mMS, plan.MS.G, plan.MS.health, eff, conf.pct);
     plan.HSD.expected = expectedRecovery(mHSD, plan.HSD.G, plan.HSD.health, eff, conf.pct);
     plan.expectedTotal = plan.MS.expected + plan.HSD.expected;
@@ -7243,7 +7387,7 @@ const AIEngine = (() => {
 
     /* The writing layer runs last: the prose is written from the settled
        conclusion, never the other way round. */
-    const W = writeAssessment(o, F, win, ranked, overallHealth, plan, conf, S, action, urgency);
+    const W = writeAssessment(o, F, win, ranked, overallHealth, plan, conf, S, action, urgency, res);
 
     /* ---- Positive and negative factors, drawn from the real vector ---- */
     const pos = [], neg = [];
@@ -7292,8 +7436,8 @@ const AIEngine = (() => {
         ' KLPM (' + parts.join(' + ') + ') within one to two cycles, taking the run-rate from ' +
         f0(F.avgCurr) + ' KLPM towards ' + f0(F.avgCurr + plan.expectedTotal) + ' KLPM against a proven ceiling of ' +
         f0(F.bestRun) + ' KLPM. This is a planning figure at ' + conf.label.toLowerCase() +
-        ' confidence, sized on the recoverable gap and the effectiveness assumption for a ' +
-        action.toLowerCase() + ' — not a forecast.';
+        ' confidence, sized on the recoverable gap and the effectiveness assumption for ' +
+        Stakeholder.inSentence(Stakeholder.interventionOf(baseAction)) + ' — not a forecast.';
     }
 
     /* ---- Reasoning sequence: how the AI actually got here ---- */
@@ -7361,11 +7505,19 @@ const AIEngine = (() => {
     R.push('Wrote the assessment from those scores, then measured it against every other note already written ' +
       'in this region with numbers stripped out. Distinctness came back at ' + f0(W.novelty * 100) +
       '% — anything under 55% is thrown away and re-composed on a different structure.');
-    R.push('Conclusion: ' + win.cause + ' \u2192 ' + action + ' (' + urgency + '), ' +
-      f0(plan.expectedTotal) + ' KLPM expected recovery, ' + S.riskBand.toLowerCase() + ' business risk.');
+    if (res.nfb.present) R.push(res.nfb.lead
+      ? 'Identified a Non-Fuel Business opportunity: ' + res.nfb.basis + ' The base intervention was ' +
+        Stakeholder.inSentence(Stakeholder.interventionOf(baseAction)) + ', so NFB Development takes the lead and is routed to the ' + Stakeholder.NFBO + '.'
+      : 'Identified a secondary Non-Fuel Business opportunity: ' + res.nfb.basis + ' It is routed to the ' + Stakeholder.NFBO +
+        ' alongside the lead intervention, which is not displaced.');
+    if (res.escalate) R.push('The outlet recorded no volume in the latest month against a non-zero history, so the visit is escalated to regional level and routed to the CRM.');
+    R.push('Conclusion: ' + win.cause + ' \u2192 ' + res.intervention + ' (' + urgency + '), Suggested Stakeholder: ' +
+      res.stakeholder + ', ' + f0(plan.expectedTotal) + ' KLPM expected recovery, ' + S.riskBand.toLowerCase() + ' business risk.');
 
     return {
       cause: win.cause, ranked, conf, F, plan, action, urgency,
+      baseAction: baseAction, intervention: res.intervention, stakeholder: res.stakeholder,
+      escalate: res.escalate, nfb: res.nfb,
       reasoning: R, positives: pos, negatives: neg, outcome,
       reason: W.reason, summary: W.summary, risk: W.risk, novelty: W.novelty,
       supporting: W.supporting, contradicting: W.contradicting, scores: S,
@@ -7394,7 +7546,7 @@ const AIEngine = (() => {
    recommendation can be opened up and audited. */
 const Actions = (() => {
 
-  const filters = { type: '', urgency: '', search: '', owner: '' };
+  const filters = { type: '', urgency: '', search: '', stakeholder: '' };
 
   const TYPES = [
     { k: 'Immediate Visit', icon: '🚨', cls: 'act-visit' },
@@ -7406,28 +7558,25 @@ const Actions = (() => {
     { k: 'Engineering Support', icon: '🔧', cls: 'act-engineering' },
     { k: 'Marketing Activity', icon: '📣', cls: 'act-marketing' },
     { k: 'Customer Acquisition', icon: '🎯', cls: 'act-acquisition' },
+    /* v9.1 — Non-Fuel Business as its own intervention type */
+    { k: 'NFB Development', icon: '🛒', cls: 'act-nfb' },
     { k: 'Monitoring Only', icon: '✅', cls: 'act-monitor' }
   ];
   const TYPE_MAP = {}; TYPES.forEach(t => TYPE_MAP[t.k] = t);
 
-  const OWNER = {
-    'Immediate Visit': 'Sales Officer + Area Manager',
-    'Dealer Meeting': 'Sales Officer / CRM',
-    'Fleet Visit': 'Fleet & Industrial Sales Officer',
-    'Win-Back Campaign': 'Sales Officer + CRM',
-    'Competitor Intelligence': 'Sales Officer / Market Intelligence',
-    'CSA Activity': 'Retail Officer (CSA Team)',
-    'Engineering Support': 'Engineering / Projects',
-    'Marketing Activity': 'Marketing Officer',
-    'Customer Acquisition': 'Sales Officer + CRM',
-    'Monitoring Only': 'Field Officer'
-  };
+  /* ===== CHANGED (v9.1): the old free-text owner map is gone. Every outlet's
+     Suggested Stakeholder is resolved by the Stakeholder architecture (one of
+     exactly six functions) and written onto o.stakeholder in applyAI(). The
+     label of each action type as a Recommended Intervention comes from the
+     same place, so the badge, the tables and the exports read identically. ===== */
+  const interventionOf = o => (o && o.intervention) || Stakeholder.interventionOf(o && o.action);
   // Conservative planning assumptions for how much of the recoverable gap an
   // intervention typically returns. Documented in the UI tooltip.
   const EFFECT = {
     'Immediate Visit': 0.55, 'Dealer Meeting': 0.40, 'Fleet Visit': 0.45,
     'Win-Back Campaign': 0.45, 'Customer Acquisition': 0.35, 'Engineering Support': 0.35,
     'Marketing Activity': 0.30, 'CSA Activity': 0.25, 'Competitor Intelligence': 0.20,
+    'NFB Development': 0.25,
     'Monitoring Only': 0.05
   };
 
@@ -7470,7 +7619,7 @@ const Actions = (() => {
      ai.plan.HSD.fieldActions), the diagnosis it has ALREADY settled on
      (ai.cause), the action it has ALREADY recommended (ai.action) and the
      recovery it has ALREADY sized (plan.expectedTotal), and turns them into
-     an execution paragraph a Sales Officer can act on.
+     an execution paragraph a Sales Area Manager can act on.
 
      Written ONCE, onto o.actionPlan, inside applyAI(). The Action Centre
      table, the Action Centre Excel and the Top 100 Attack List Excel all
@@ -7518,10 +7667,11 @@ const Actions = (() => {
     'Dealer Meeting': 'hold a formal dealer meeting',
     'Fleet Visit': 'run a fleet and bulk-customer visit',
     'Win-Back Campaign': 'open a win-back campaign on the volume already lost',
-    'Competitor Intelligence': 'complete a competitor intelligence check on the nearby sites',
+    'Competitor Intelligence': 'complete a market / competitor assessment of the nearby sites',
     'CSA Activity': 'schedule a CSA drive at the outlet',
-    'Engineering Support': 'raise an engineering support request for the site',
+    'Engineering Support': 'survey the site and carry out the required engineering rectification',
     'Marketing Activity': 'run a local marketing activation',
+    'NFB Development': 'develop the outlet\u2019s non-fuel business \u2014 convenience retail, lubricants and add-ons, and customer facilities',
     'Customer Acquisition': 'run a customer acquisition drive across the catchment',
     'Monitoring Only': 'keep the outlet on routine monitoring'
   };
@@ -7552,7 +7702,7 @@ const Actions = (() => {
     const action  = (ai && ai.action)  || o.action  || 'Monitoring Only';
     const urgency = (ai && ai.urgency) || o.urgency || 'Routine';
     const cause   = (ai && ai.cause)   || o.rootCause || '';
-    const owner   = OWNER[action] || o.owner || 'Field Officer';
+    const owner   = (ai && ai.stakeholder) || o.stakeholder || Stakeholder.forAction(action);
     const expected = Number(o.expectedImpact || (ai && ai.plan && ai.plan.expectedTotal) || 0);
 
     const S = [];
@@ -7561,8 +7711,16 @@ const Actions = (() => {
     const verb = ACTION_VERB[action] || 'act on this outlet';
     const when = URG_WHEN[urgency] || 'in the normal beat plan';
     const opener = CAUSE_OPENER[cause] || '';
-    S.push('Have the ' + owner + ' ' + verb + ' ' + when +
+    S.push((ai && ai.escalate
+        ? 'Escalate to ' + Stakeholder.phrase(owner) + ': the outlet recorded no volume in the latest month, so ' +
+          Stakeholder.phrase(Stakeholder.SAM) + ' should ' + verb + ' ' + when
+        : 'Have ' + Stakeholder.phrase(owner) + ' ' + verb + ' ' + when) +
       (opener ? ' ' + opener : '') + '.');
+    /* v9.1 — an NFB opportunity that did not take the lead is still routed. */
+    if (ai && ai.nfb && ai.nfb.present && !ai.nfb.lead) {
+      S.push('In parallel, the ' + Stakeholder.NFBO + ' should take up NFB development at the outlet (' +
+        ai.nfb.hits.map(h => h.play.toLowerCase()).join('; ') + ').');
+    }
 
     /* ---- 2. MS: only if the engine judged MS weak and selected actions ---- */
     if (msFA.length) {
@@ -7613,7 +7771,13 @@ const Actions = (() => {
     o.reason = ai.reason;
     o.rootCause = ai.cause;
     o.confidence = ai.conf.label;
-    o.owner = OWNER[ai.action];
+    /* v9.1 — WHAT and WHO, kept separate. */
+    o.intervention = ai.intervention || Stakeholder.interventionOf(ai.action);
+    o.stakeholder = ai.stakeholder || Stakeholder.forAction(ai.action);
+    o.nfb = ai.nfb || { present: false, lead: false, hits: [], basis: '' };
+    /* Secondary NFB, stated in one plain line for tables, popups and exports. */
+    o.nfbNote = o.nfb.present && !o.nfb.lead
+      ? 'NFB Development \u2192 ' + Stakeholder.NFBO : '';
     o.urgencyRank = URG_RANK[ai.urgency];
     o.expectedImpact = ai.plan.expectedTotal;
     o.expectedMS = ai.plan.MS.expected;
@@ -7626,7 +7790,7 @@ const Actions = (() => {
     /* ===== NEW (v4.5.2): the Action Plan, written ONCE, here.
        Every consumer — the Action Centre table, the Action Centre Excel and
        the Top 100 Attack List Excel — reads this one property. It is derived
-       purely from values already set above (o.action, o.owner, o.urgency,
+       purely from values already set above (o.action, o.stakeholder, o.urgency,
        o.expectedImpact) plus the field actions the engine already selected,
        so it cannot drift from the recommendation it describes. ===== */
     o.actionPlan = buildActionPlan(o, ai);
@@ -7792,10 +7956,17 @@ const Actions = (() => {
     }
   }
 
-  const actBadge = a => {
+  /* v9.1 — the badge carries the ACTION TYPE (icon + colour) and reads as
+     the Recommended Intervention. Pass the outlet as the second argument to
+     show its own resolved intervention (e.g. a CRM escalation). */
+  const actBadge = (a, o) => {
     const t = TYPE_MAP[a] || { icon: '', cls: 'act-monitor' };
-    return '<span class="badge-act ' + t.cls + '">' + t.icon + ' ' + Util.esc(a) + '</span>';
+    const label = (o && o.intervention) || Stakeholder.interventionOf(a);
+    return '<span class="badge-act ' + t.cls + '" title="Action type: ' + Util.esc(a) + '">' + t.icon + ' ' + Util.esc(label) + '</span>';
   };
+  /* Suggested Stakeholder chip, plus the secondary NFB routing if any. */
+  const stakeHtml = o => Util.esc(o.stakeholder || '') +
+    (o.nfbNote ? '<div class="nfb-sub" title="' + Util.esc(o.nfb && o.nfb.basis || '') + '">+ ' + Util.esc(Stakeholder.NFBO) + ' (NFB)</div>' : '');
   const urgBadge = u => {
     const cls = { 'Immediate': 'urg-immediate', 'This Week': 'urg-week', 'This Month': 'urg-month', 'Routine': 'urg-routine' }[u] || 'urg-routine';
     return '<span class="badge-urg ' + cls + '">' + u + '</span>';
@@ -7822,7 +7993,7 @@ const Actions = (() => {
     let l = Model.state.hpclOutlets;
     if (filters.type) l = l.filter(o => o.action === filters.type);
     if (filters.urgency) l = l.filter(o => o.urgency === filters.urgency);
-    if (filters.owner) l = l.filter(o => o.owner === filters.owner);
+    if (filters.stakeholder) l = l.filter(o => o.stakeholder === filters.stakeholder);
     if (filters.search) {
       const s = filters.search.toLowerCase();
       l = l.filter(o => o.name.toLowerCase().includes(s) || o.ta.toLowerCase().includes(s) ||
@@ -7840,12 +8011,12 @@ const Actions = (() => {
       c.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
     document.getElementById('actionTypeChips').innerHTML =
-      '<button class="chip' + (!filters.type ? ' active' : '') + '" onclick="Actions.setType(\'\')">All Actions<span class="cnt">' + all.length + '</span></button>' +
+      '<button class="chip' + (!filters.type ? ' active' : '') + '" onclick="Actions.setType(\'\')">All Interventions<span class="cnt">' + all.length + '</span></button>' +
       '<span class="chip-sep"></span>' +
       TYPES.map(t => {
         const n = all.filter(o => o.action === t.k).length;
         return '<button class="chip' + (filters.type === t.k ? ' active' : '') + '" onclick="Actions.setType(\'' + t.k + '\')">' +
-          t.icon + ' ' + t.k + '<span class="cnt">' + n + '</span></button>';
+          t.icon + ' ' + Util.esc(Stakeholder.interventionOf(t.k)) + '<span class="cnt">' + n + '</span></button>';
       }).join('');
 
     const urg = ['Immediate', 'This Week', 'This Month', 'Routine'];
@@ -7875,11 +8046,16 @@ const Actions = (() => {
     badge.textContent = due;
     badge.className = 'tab-count' + (due ? '' : ' zero');
 
-    const owners = [...new Set(all.map(o => o.owner))].sort();
-    const sel = document.getElementById('actionOwnerFilter');
+    /* v9.1 — the six authorised stakeholders, always in the same order, each
+       with its count. Counted on o.stakeholder — the same value the table,
+       filter and exports use. */
+    const sel = document.getElementById('actionStakeholderFilter');
     const keep = sel.value;
-    sel.innerHTML = '<option value="">All Owners</option>' +
-      owners.map(o => '<option' + (o === keep ? ' selected' : '') + '>' + Util.esc(o) + '</option>').join('');
+    sel.innerHTML = '<option value="">All Stakeholders</option>' +
+      Stakeholder.LIST.map(k => {
+        const n = all.filter(o => o.stakeholder === k).length;
+        return '<option value="' + Util.esc(k) + '"' + (k === keep ? ' selected' : '') + '>' + Util.esc(k) + ' (' + n + ')</option>';
+      }).join('');
   }
 
   function render() {
@@ -7943,9 +8119,9 @@ const Actions = (() => {
         /* ===== NEW (v4.5.2): the execution paragraph, read straight off the
              outlet — not rebuilt here. ===== */
         '<td class="cell-plan">' + Util.esc(o.actionPlan || '') + '</td>' +
-        '<td class="cell-action">' + actBadge(o.action) + '</td>' +
+        '<td class="cell-action">' + actBadge(o.action, o) + '</td>' +
         '<td class="num cell-strong" title="MS ' + Util.fmt0(o.expectedMS) + ' + HSD ' + Util.fmt0(o.expectedHSD) + ' KLPM">' + Util.fmt0(o.expectedImpact) + '</td>' +
-        '<td>' + Util.esc(o.owner) + '</td>' +
+        '<td>' + stakeHtml(o) + '</td>' +
         '<td>' + urgBadge(o.urgency) + '</td>' +
         '<td>' + nav + '</td>' +
         '</tr>';
@@ -7978,7 +8154,7 @@ const Actions = (() => {
     const E = Util.esc;
 
     document.getElementById('whyTitle').innerHTML =
-      E(o.name) + ' &nbsp;' + actBadge(o.action) + ' ' + urgBadge(o.urgency);
+      E(o.name) + ' &nbsp;' + actBadge(o.action, o) + ' ' + urgBadge(o.urgency);
     document.getElementById('whySub').textContent =
       o.ta + ' · ' + o.district + ' · ' + o.salesArea + ' · ' +
       ctx.currStart + ' to ' + ctx.currEnd + ' vs ' + ctx.histStart + ' to ' + ctx.histEnd;
@@ -7991,13 +8167,34 @@ const Actions = (() => {
 
     let h = '';
 
-    /* ---- 1. The verdict ---- */
-    h += '<div class="why-sec"><div class="why-verdict">' +
-      '<b>AI root cause: ' + E(c.cause) + '</b> · ' + c.confidence + ' confidence (' +
+    /* ---- 1. The verdict (v9.1: five-part decision summary) ----
+       Root cause → evidence → Recommended Intervention → Suggested
+       Stakeholder → expected objective. Every value is read off the outlet;
+       nothing is recomputed here. */
+    const evid = [
+      'MS + HSD ' + Util.pct(o.growthPct) + ' vs last year (' + Util.fmt0(o.curr) + ' KL now)',
+      'MS ' + Util.gtxt(o.ms.growth) + ', HSD ' + Util.gtxt(o.hsd.growth),
+      'trading area ' + Util.pct(c.taGrowth) + ' (' + String(c.taState || '').toLowerCase() + ')',
+      'competitive pressure ' + Util.fmt0(c.pressure) + '/100',
+      'actionable potential ' + Util.fmt0(o.actionableVolumePotential != null ? o.actionableVolumePotential : o.recoveryPotential) + ' KLPM',
+      'priority ' + Util.fmt1(o.priorityScore) + ' (' + o.priorityBand + ')'
+    ].join(' · ');
+    const objective = (ai && ai.outcome) ||
+      ('Expected volume recovery of ' + Util.fmt0(o.expectedImpact) + ' KLPM.');
+    h += '<div class="why-sec"><h4>Decision summary</h4><div class="why-verdict">' +
+      '<b>1. Root cause:</b> ' + E(c.cause) + ' · ' + c.confidence + ' confidence (' +
       Util.fmt0(c.confidencePct) + '%)<br>' + E(o.reason) +
-      '<br><br><b>Recommended action:</b> ' + E(o.action) + ' · <b>Owner:</b> ' + E(o.owner) +
-      ' · <b>Expected volume recovery:</b> ' + Util.fmt0(o.expectedImpact) + ' KLPM · <b>Priority:</b> ' +
-      Util.fmt1(o.priorityScore) + ' (' + o.priorityBand + ')</div></div>';
+      '<br><br><b>2. Evidence / metrics:</b> ' + E(evid) +
+      '<br><br><b>3. Recommended Intervention:</b> ' + E(interventionOf(o)) + ' · ' + E(o.urgency) +
+      '<br><b>4. Suggested Stakeholder:</b> ' + E(o.stakeholder) +
+      (o.nfb && o.nfb.present
+        ? '<br><b>NFB opportunity:</b> ' + E(o.nfb.basis) + (o.nfb.lead
+            ? ' Routed to the ' + E(Stakeholder.NFBO) + ' as the lead intervention.'
+            : ' Also routed to the ' + E(Stakeholder.NFBO) + ' (NFB Development) alongside the lead intervention.')
+        : '') +
+      '<br><br><b>5. Expected objective / business outcome:</b> ' + E(objective) +
+      ' <span class="subtle">(expected volume recovery ' + Util.fmt0(o.expectedImpact) + ' KLPM)</span>' +
+      '</div></div>';
 
     if (o.businessSummary) {
       h += '<div class="why-sec"><h4>Business summary</h4><div class="why-verdict">' +
@@ -8202,7 +8399,7 @@ const Actions = (() => {
     }
 
     /* ---- 4c. How the opportunity was sized (v4.2) ----
-       The one place a Sales Officer can see every signal that produced the
+       The one place a Sales Area Manager can see every signal that produced the
        Actionable Volume Potential, the weight each carried, and every damping
        and cap applied. Without this the headline figure is a black box. */
     if (o.opp) {
@@ -8434,7 +8631,7 @@ const Actions = (() => {
   }
 
   /* ===== NEW (v6.0, MS/HSD parallel): PRODUCT ISSUE CLASSIFICATION ==========
-     Tells the Sales Officer WHICH product is driving the outlet's situation.
+     Tells the Sales Area Manager WHICH product is driving the outlet's situation.
      Read straight off the AI engine's independent MS and HSD verdicts
      (plan.MS.weak / plan.HSD.weak and their health status) plus each product's
      own volume change and independently-sized opportunity. It is a label only:
@@ -8491,7 +8688,7 @@ const Actions = (() => {
   }
   const issueBadge = (label, cls) => '<span class="iss-badge ' + (cls || '') + '">' + Util.esc(label) + '</span>';
 
-  return { score, classify, applyAI, render, renderKPIs, renderRollup, renderChips, setType, setUrgency, clear, current, buildRoute, buildRouteForTA, actBadge, urgBadge, why, closeWhy, filters, TYPES, EFFECT, fieldActionsHtml, issueBadge,
+  return { score, classify, applyAI, render, renderKPIs, renderRollup, renderChips, setType, setUrgency, clear, current, buildRoute, buildRouteForTA, actBadge, urgBadge, why, closeWhy, filters, TYPES, EFFECT, fieldActionsHtml, issueBadge, stakeHtml, interventionOf,
            productIssues, issueBadge };
 })();
 
@@ -8545,7 +8742,7 @@ const Exceptions = (() => {
           title: o.name + ' is down ' + Util.fmt1(Math.abs(o.growthPct)) + '%',
           desc: o.ta + ' · ' + Util.fmt0(Math.abs(o.gainKL)) + ' KL lost against the same months last year. ' +
             (o.primaryIssue ? 'Driver: ' + o.primaryIssue + ' — ' + o.issueDetail + '. ' : '') +
-            'Recommended: ' + o.action + '.',
+            'Recommended Intervention: ' + Actions.interventionOf(o) + ' · Suggested Stakeholder: ' + o.stakeholder + '.',
           ta: o.ta, outlet: o
         });
       } else if (o.declines >= 3) {
@@ -8554,7 +8751,7 @@ const Exceptions = (() => {
           title: o.name + ': ' + o.declines + ' consecutive months down',
           desc: o.ta + ' · ending ' + ctx.currEnd + '. ' +
             (o.primaryIssue ? 'Driver: ' + o.primaryIssue + ' — ' + o.issueDetail + '. ' : '') +
-            'Recommended: ' + o.action + '.',
+            'Recommended Intervention: ' + Actions.interventionOf(o) + ' · Suggested Stakeholder: ' + o.stakeholder + '.',
           ta: o.ta, outlet: o
         });
       }
@@ -8814,7 +9011,7 @@ const Brief = (() => {
       Util.fmt0(T.marketCapturePotential) + ' market capture).</p>';
     if (topOutlet && topOutlet.action !== 'Monitoring Only') {
       todo += '<p><b>Start here:</b> ' + goLink('UX.openOutlet(' + topOutlet.__i + ')', Util.esc(topOutlet.name), 'Open this outlet’s diagnosis and plan') + ' in ' + taLink(topOutlet.ta) +
-        ' — ' + Util.esc(topOutlet.action.toLowerCase()) + ', owned by ' + Util.esc(topOutlet.owner) + '. ' +
+        ' — ' + Util.esc(Stakeholder.inSentence(Actions.interventionOf(topOutlet))) + ', Suggested Stakeholder: ' + Util.esc(topOutlet.stakeholder) + '. ' +
         Util.esc(topOutlet.reason) + '</p>';
     }
     const easy = M.tas.filter(t => t.isEasyWin);
@@ -9705,9 +9902,9 @@ const ColResize = (() => {
        prose rather than as a column of fragments. The table already grows past
        the panel and .table-wrap supplies horizontal scrolling. ===== */
     'Action Plan': 460,
-    'Recommended Action': 175,
+    'Recommended Intervention': 190,
     'Expected KLPM': 96,
-    'Suggested Owner': 155,
+    'Suggested Stakeholder': 175,
     'Urgency': 110,
     'Go': 54
   };
@@ -9876,7 +10073,8 @@ const Exporter = (() => {
       'MS Status', 'MS Diagnosis', 'MS Strategy', 'MS Field Actions',
       'HSD Status', 'HSD Diagnosis', 'HSD Strategy', 'HSD Field Actions',
       'Expected Recovery MS (KLPM)', 'Expected Recovery HSD (KLPM)',
-      'Recommended Action', 'Expected KL Impact (KLPM)', 'Suggested Owner', 'Urgency',
+      'Action Type', 'Recommended Intervention', 'Expected KL Impact (KLPM)', 'Suggested Stakeholder',
+      'NFB Opportunity', 'NFB Stakeholder', 'Urgency',
       'Latitude', 'Longitude'];
     const rows = [['HPCL Outlet Action Centre — ' + (Data.activeRegion() ? Data.activeRegion() + ' Region · ' : '') +
                    ctx.currStart + ' to ' + ctx.currEnd], head];
@@ -9923,7 +10121,10 @@ const Exporter = (() => {
         hsd ? hsd.health.status : '', hsd && hsd.weak ? hsd.cause : '', plays(hsd),
         (hsd && hsd.fieldActions && hsd.fieldActions.length) ? hsd.fieldActions.join(' | ') : '',
         ms ? Math.round(ms.expected) : '', hsd ? Math.round(hsd.expected) : '',
-        o.action, Math.round(o.expectedImpact), o.owner, o.urgency,
+        o.action, Actions.interventionOf(o), Math.round(o.expectedImpact), o.stakeholder || '',
+        (o.nfb && o.nfb.present) ? (o.nfb.lead ? 'Lead — ' : 'Secondary — ') + o.nfb.basis : '',
+        (o.nfb && o.nfb.present) ? Stakeholder.NFBO : '',
+        o.urgency,
         o.lat == null ? '' : o.lat, o.lon == null ? '' : o.lon]);
     });
     /* ===== NEW (v3.9): formatted Excel instead of a plain grid =====
@@ -10363,8 +10564,8 @@ const DealerAttack = (() => {
 
     /* --- classification ---------------------------------------------
        Two axes: is the surrounding market healthy, and are we behind
-       comparable neighbours? Plus a structural bucket, so a Sales
-       Officer is never sent back to a gap no dealer can close. */
+       comparable neighbours? Plus a structural bucket, so a Sales Area
+       Manager is never sent back to a gap no dealer can close. */
     const localG = (o.cc && o.cc.local) ? o.cc.local.growthPct : taGrowth;
     const healthy = (taGrowth > -2) || (localG > -2);
     let cls;
@@ -10788,7 +10989,7 @@ const DealerAttack = (() => {
        Both are read off the SAME outlet object the Action Centre paints, and the
        recommendation and its sized recovery are carried alongside so the
        spreadsheet and the dashboard read identically. ===== */
-    'Reason', 'Action Plan', 'Recommended Action', 'Expected Impact (KLPM)',
+    'Reason', 'Action Plan', 'Recommended Intervention', 'Suggested Stakeholder', 'Expected Impact (KLPM)',
     'Opportunity Type', 'Why Attack?',
     'HPCL Growth %', 'Comparable Growth %', 'Caveats'];
 
@@ -10837,7 +11038,7 @@ const DealerAttack = (() => {
         /* Object-identity read of the very same property the Action Centre
            renders — no second Action Plan is generated anywhere on this page. */
         S(o.actionPlan || ''),
-        S(o.action || ''), N(o.expectedImpact || 0, '#,##0.0'),
+        S(o.action ? Actions.interventionOf(o) : ''), S(o.stakeholder || ''), N(o.expectedImpact || 0, '#,##0.0'),
         S(e.cls), S(why(o, e)),
         N(e.ownG, '[Green]+0.0"%";[Red]-0.0"%";[Black]0.0"%"'),
         N(e.compG, '[Green]+0.0"%";[Red]-0.0"%";[Black]0.0"%"'),
@@ -11625,7 +11826,7 @@ const MapView = (() => {
      from Data.state.periods, so it stretches or shrinks with the file).
      Until now the popup only ever looked at the selected period plus two
      all-time figures, which answers "how did this outlet do last month?"
-     but not the question a Sales Officer actually walks in with:
+     but not the question a Sales Area Manager actually walks in with:
 
         is this outlet structurally strong, temporarily weak,
         recovering, or in long-term decline?
@@ -11976,11 +12177,12 @@ const MapView = (() => {
        to open anything to find out what to do. Values come untouched from the
        AI Decision Engine; only the urgency accent colour is added. */
     if (o.company === 'HPC' && o.action) {
-      html += head('Recommended action', 'h-act') +
+      html += head('Recommended Intervention', 'h-act') +
         '<div class="pop-act" style="border-left-color:' + actionColor(o) + ';">' +
-        '<b>' + E(o.action) + '</b> · ' + E(o.urgency) +
+        '<b>' + E(Actions.interventionOf(o)) + '</b> · ' + E(o.urgency) +
         '<br><span style="color:#6b7686;">' + E(o.reason) + '</span>' +
-        '<br><b>Owner:</b> ' + E(o.owner) +
+        '<br><b>Suggested Stakeholder:</b> ' + E(o.stakeholder || '') +
+        (o.nfbNote ? '<br><b>NFB opportunity:</b> NFB Development · ' + E(Stakeholder.NFBO) : '') +
         ' · <b>Expected:</b> ' + Util.fmt0(o.expectedImpact) + ' KLPM</div>';
     }
 
@@ -12609,7 +12811,7 @@ const MapView = (() => {
     const rows = [...t.outlets].sort((a, b) => b.curr - a.curr).map(o => {
       const dist = (t.lat != null && o.lat != null) ? Util.distanceKm(t.lat, t.lon, o.lat, o.lon).toFixed(2) + ' km' : '—';
       const nc = o.company === 'HPC' && o.nearestCompDist != null ? Util.fmt1(o.nearestCompDist) + ' km' : '—';
-      const act = o.company === 'HPC' && o.action ? Actions.actBadge(o.action) : '<span class="subtle">Competitor outlet</span>';
+      const act = o.company === 'HPC' && o.action ? Actions.actBadge(o.action, o) : '<span class="subtle">Competitor outlet</span>';
       const nav = o.lat != null
         ? '<a class="btn-mini gmap" target="_blank" rel="noopener" href="' + Util.gmapsNavUrl(o.lat, o.lon) + '">📍</a>' : '—';
       /* ===== NEW (v4.6): a class on the <tr> and nothing else. No extra cell,
@@ -13073,9 +13275,9 @@ const TAReport = (() => {
         msActions,
         hsdActions,
         actionPlan,
-        o.action || '',
+        o.action ? Actions.interventionOf(o) : '',
         Util.fmt0(o.expectedImpact),
-        o.owner || '',
+        (o.stakeholder || '') + (o.nfbNote ? '\n+ ' + Stakeholder.NFBO + ' (NFB)' : ''),
         o.urgency || ''
       ];
     });
@@ -13145,7 +13347,7 @@ const TAReport = (() => {
       Util.ppDelta(t.shareDelta),
       (t.lat != null && o.lat != null) ? Util.distanceKm(t.lat, t.lon, o.lat, o.lon).toFixed(2) + ' km' : '—',
       (o.company === 'HPC' && o.nearestCompDist != null) ? Util.fmt1(o.nearestCompDist) + ' km' : '—',
-      o.company === 'HPC' && o.action ? o.action : 'Competitor outlet'
+      o.company === 'HPC' && o.action ? Actions.interventionOf(o) : 'Competitor outlet'
     ]);
   }
 
@@ -13391,7 +13593,7 @@ const TAReport = (() => {
          'Recovery Potential (KLPM)',
          'Actionable Volume Potential (KLPM)', 'Priority', 'Reason',
          'MS Actions', 'HSD Actions', 'Action Plan',
-         'Recommended Action', 'Expected Impact (KLPM)', 'Suggested Owner', 'Urgency'],
+         'Recommended Intervention', 'Expected Impact (KLPM)', 'Suggested Stakeholder', 'Urgency'],
         acRows,
         {
           /* v6.0 — widths still sum to 276mm (landscape A4, 10mm margins) */
@@ -13476,7 +13678,7 @@ const TAReport = (() => {
       y = table(doc, y,
         ['Outlet', 'OMC', 'Current MS (KL)', 'Current HSD (KL)', 'Current Total (KL)',
          'Hist MS (KL)', 'Hist HSD (KL)', 'Hist Total (KL)', 'MS Growth', 'HSD Growth', 'Total Growth',
-         'TA Share \u0394 (pp)', 'Distance from TA Centre', 'Nearest Competitor', 'Recommended Action'],
+         'TA Share \u0394 (pp)', 'Distance from TA Centre', 'Nearest Competitor', 'Recommended Intervention'],
         taDetailRows(snap),
         { 0: { cellWidth: 40, fontStyle: 'bold' }, 1: { cellWidth: 14 }, 14: { cellWidth: 34 } },
         [8, 9, 10, 11], 6.4);
@@ -14080,8 +14282,8 @@ const App = (() => {
     tp.innerHTML = P.map(p => '<option>' + Util.esc(p) + '</option>').join('');
     /* v4.0 — DEFAULT PERIOD IS THE LATEST AVAILABLE MONTH.
        Previously this opened on the latest COMPLETE financial year (Apr 2025 →
-       Mar 2026 with today's file), which is the wrong first screen: a Sales
-       Officer opening the dashboard wants to see the month that just closed,
+       Mar 2026 with today's file), which is the wrong first screen: a Sales Area
+       Manager opening the dashboard wants to see the month that just closed,
        not a twelve-month average that hides it.
 
        The latest month is read from the data, never hard-coded, so this keeps
@@ -14234,7 +14436,7 @@ const App = (() => {
 
   /* Everything that belongs to the previous region is cleared; user
      preferences that mean the same thing in every region (Product, action and
-     territory chips, owner, map mode and toggles, base map, sort orders, the
+     territory chips, stakeholder, map mode and toggles, base map, sort orders, the
      open tab) are kept. */
   function resetForRegion() {
     resetOutletSelection();
@@ -14481,8 +14683,8 @@ const App = (() => {
     document.getElementById('actionSearch').addEventListener('input', Util.debounce(e => {
       Actions.filters.search = e.target.value.trim().toLowerCase(); Actions.render();
     }));
-    document.getElementById('actionOwnerFilter').addEventListener('change', e => {
-      Actions.filters.owner = e.target.value; Actions.render();
+    document.getElementById('actionStakeholderFilter').addEventListener('change', e => {
+      Actions.filters.stakeholder = e.target.value; Actions.render();
     });
     document.getElementById('tableSearch').addEventListener('input', Util.debounce(e => {
       Territory.filters.search = e.target.value.trim().toLowerCase(); Territory.render();
@@ -14780,7 +14982,7 @@ const UX = (() => {
     $('oxTitle').textContent = o.name;
     $('oxMeta').textContent = ['HPCL', o.sap ? 'SAP ' + o.sap : '', o.ta, o.district, o.salesArea].filter(x => x && x !== '—').join(' · ');
     const cc = o.cc || {};
-    const tags = (Actions.actBadge ? Actions.actBadge(o.action) : E(o.action)) + ' ' + (Actions.urgBadge ? Actions.urgBadge(o.urgency) : '') +
+    const tags = (Actions.actBadge ? Actions.actBadge(o.action, o) : E(o.intervention || o.action)) + ' ' + (Actions.urgBadge ? Actions.urgBadge(o.urgency) : '') +
       (cc.cause ? ' <span class="rc-badge ' + (cc.causeClass || '') + '">' + E(cc.cause) + '</span>' : '') +
       (cc.confidence ? ' <span class="conf-tag">' + E(cc.confidence) + ' confidence</span>' : '');
     const f0 = Util.fmt0;
@@ -14799,7 +15001,9 @@ const UX = (() => {
       '<div class="ox-sec"><h4>Main issue</h4><p>' + issue + '</p></div>' +
       '<div class="ox-sec"><h4>Why</h4><p>' + E(o.reason || '') + '</p>' + (Actions.fieldActionsHtml ? Actions.fieldActionsHtml(o) : '') + '</div>' +
       (o.actionPlan ? '<div class="ox-sec"><h4>Action plan</h4><p>' + E(o.actionPlan) + '</p></div>' : '') +
-      '<div class="ox-sec"><h4>Owner</h4><p>' + E(o.owner || '—') + '</p></div>' +
+      '<div class="ox-sec"><h4>Recommended Intervention</h4><p>' + E(o.intervention || '—') + '</p></div>' +
+      '<div class="ox-sec"><h4>Suggested Stakeholder</h4><p>' + E(o.stakeholder || '—') +
+        (o.nfbNote ? '<br><span class="subtle">NFB opportunity also routed to the ' + E(Stakeholder.NFBO) + ': ' + E(o.nfb.basis) + '</span>' : '') + '</p></div>' +
       '<div class="ox-sec"><h4>Monthly volume, last 24 months (KL)</h4><div class="ox-chart"><canvas id="oxChart"></canvas></div></div>';
     const nav = o.lat != null ? '<a class="btn-ghost" target="_blank" rel="noopener" href="' + Util.gmapsNavUrl(o.lat, o.lon) + '">' + ICO('pin') + 'Navigate in Google Maps</a>' : '';
     $('oxActions').innerHTML =
